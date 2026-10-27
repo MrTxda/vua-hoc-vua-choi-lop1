@@ -192,7 +192,7 @@
 
     <div class="khung-bai">
       <h3 style="margin-top:0">🎮 Khu vui chơi thưởng</h3>
-      <p class="mo-ta" style="margin-bottom:0">Hoàn thành 1 bài học là mở khóa khu này. Đạt 30 sao trong ngày là chơi thỏa thích cả 3 trò!</p>
+      <p class="mo-ta" style="margin-bottom:0">Hoàn thành 1 bài học là mở khóa khu này. Đạt 30 sao trong ngày là chơi thỏa thích cả 4 trò!</p>
       <div id="khuVuiChoi" style="margin-top:16px"></div>
     </div>
   </section>
@@ -764,11 +764,12 @@ function ketThucGame(){
     + (stickerMoi ? '<p style="font-size:24px">🎁 Bé mở được hình dán mới: <span style="font-size:52px">'+stickerMoi+'</span></p>' : '<p>🎁 Bé đã sưu tập đủ hình dán trong đợt này rồi!</p>')
     + '<div class="ke-trang"><button class="nut nut-hong" onclick="batDauGame(\''+current.mon+'\',\''+current.game+'\')">🔄 Chơi lại bài này</button>'
     + '<button class="nut nut-xanh" onclick="moMon(\''+current.mon+'\')">📚 Chọn bài khác</button></div>'
-    + '<div style="margin-top:22px; border-top:3px dashed #ffc93c; padding-top:16px"><h3 style="margin:0">🎮 Thưởng: 3 trò chơi nho nhỏ đã mở khóa!</h3>'
+    + '<div style="margin-top:22px; border-top:3px dashed #ffc93c; padding-top:16px"><h3 style="margin:0">🎮 Thưởng: 4 trò chơi nho nhỏ đã mở khóa!</h3>'
     + (state.stars >= 30 ? '<p style="font-size:20px">🏆 Bé đã đạt mục tiêu 30 sao hôm nay rồi! Chơi thỏa thích nhé!</p>' : '<p style="font-size:19px">Bé vừa hoàn thành 1 bài học nên khu vui chơi đã mở khóa rồi đấy!</p>')
     + '<div class="ke-trang"><button class="nut nut-vang" onclick="renderMiniBong()">🎈 Bắt bóng bay</button>'
     + '<button class="nut nut-vang" onclick="renderMiniLatThe()">🃏 Lật thẻ trí nhớ</button>'
-    + '<button class="nut nut-vang" onclick="renderMiniTimSao()">⭐ Tìm sao khác biệt</button></div></div></div>';
+    + '<button class="nut nut-vang" onclick="renderMiniTimSao()">⭐ Tìm sao khác biệt</button>'
+    + '<button class="nut nut-vang" onclick="render2048()">🔢 Trò chơi 2048</button></div></div></div>';
 }
 </script>
 <script>

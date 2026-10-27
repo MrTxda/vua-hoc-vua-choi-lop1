@@ -1,9 +1,9 @@
 // ============================================================
-// KHU VUI CHƠI THƯỞNG - 3 trò chơi nho nhỏ
+// KHU VUI CHƠI THƯỞNG - 4 trò chơi nho nhỏ (3 trò cũ + 2048)
 // Quy tắc mở khóa (hiển thị rõ cho bé và phụ huynh):
 // - Chưa hoàn thành bài học nào: khu vui chơi bị khóa, hiện 🔒.
 // - Hoàn thành 1 bài học (state.daLamBai = true, lưu localStorage):
-//   mở khóa cả 3 trò. Sau mỗi bài học, màn hình hoàn thành cũng
+//   mở khóa cả 4 trò. Sau mỗi bài học, màn hình hoàn thành cũng
 //   hiện luôn 3 nút này để bé chơi ngay.
 // - Đạt 30 sao trong ngày: hiện thêm banner "Đã đạt mục tiêu!".
 // Thưởng: mỗi trò hoàn thành được +2 sao, +10 điểm (không tính
@@ -24,6 +24,7 @@ function renderKhuVuiChoi(){
     + '<div class="mini-game-card" onclick="renderMiniBong(); amClick()"><span style="font-size:52px">🎈</span><b>Bắt bóng bay</b><span>Bấm vỡ 10 quả bóng bay.</span></div>'
     + '<div class="mini-game-card" onclick="renderMiniLatThe(); amClick()"><span style="font-size:52px">🃏</span><b>Lật thẻ trí nhớ</b><span>Tìm 4 cặp thẻ giống nhau.</span></div>'
     + '<div class="mini-game-card" onclick="renderMiniTimSao(); amClick()"><span style="font-size:52px">⭐</span><b>Tìm sao khác biệt</b><span>Tìm ngôi sao khác trong 3 vòng.</span></div>'
+    + '<div class="mini-game-card" onclick="render2048(); amClick()"><span style="font-size:52px">🔢</span><b>Trò chơi 2048</b><span>Gộp các ô giống nhau đến 128.</span></div>'
     + '</div>';
 }
 function thuongMiniGame(ten){

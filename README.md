@@ -21,6 +21,8 @@ vua-hoc-vua-choi/
     data-thechat.js      Giáo dục thể chất: 30 câu + vận động đếm số
     data-trainghiem.js   Hoạt động trải nghiệm: 30 câu + bảng việc tốt
     data-tienganh.js     Tiếng Anh: 30 câu từ vựng + 30 câu nghe
+    data-minigame.js     Khu vui chơi thưởng: bắt bóng, lật thẻ, tìm sao
+    data-2048.js        Trò chơi 2048 bản lớp 1 (mục tiêu 128)
     build.py             Gộp nguồn thành 1 file HTML duy nhất
   dist/
     vua-hoc-vua-choi-lop1-day-du.html   File bàn giao, mở là chạy
