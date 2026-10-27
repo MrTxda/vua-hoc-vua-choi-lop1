@@ -1,3 +1,2 @@
-__pycache__/
-*.pyc
-.DS_Store
+tts-cache/
+server-url.txt
