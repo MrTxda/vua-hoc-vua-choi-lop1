@@ -233,7 +233,7 @@
     <button class="nut nut-nho" onclick="moPhuHuynh(); amClick()">👨‍👩‍👧 Chế độ phụ huynh</button>
     <button class="nut nut-nho" id="nutAm" onclick="doiAmThanh()">🔊 Âm thanh: Bật</button>
     <button class="nut nut-nho" id="nutGiong" onclick="doiGiongDoc()">🎙️ Giọng đọc: Bật</button>
-    <button class="nut nut-nho" onclick="thuGiongDoc(); amClick()">🔊 Thử giọng đọc</button>
+    <button class="nut nut-nho" onclick="thuGiongDoc()">🔊 Thử giọng đọc</button>
   </div>
 </footer>
 <div id="toast"></div>
@@ -250,6 +250,7 @@ function tone(tanSo, thoiLuong, kieu, tre){
   if(!amBat) return;
   try{
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    try{ if(AC.state === 'suspended') AC.resume(); }catch(e){}
     const o = AC.createOscillator(), g = AC.createGain();
     o.type = kieu || 'sine'; o.frequency.value = tanSo;
     const t0 = AC.currentTime + (tre || 0);
@@ -350,6 +351,7 @@ function docCauHoiHienTai(){
   else docTiengViet(q.cau);
 }
 function docDapAn(i){
+  _docToken++;
   if(!current) return;
   const q = current.cauHoi[current.viTri]; if(!q) return;
   const da = q.luaChon[i];
@@ -829,7 +831,7 @@ function batDauGame(monId, gameId){
      đáp án đúng luôn ở vị trí đầu tiên như bản cũ ở môn Cuộc sống. */
   const soCau = (gameId==='nhan' || gameId==='tu' || gameId==='chinh' || gameId==='dem') ? 8 : 10;
   const cauHoi = tron(NGAN_HANG.filter(q => q.mon===monId && q.game===gameId)).slice(0, soCau)
-    .map(q => ({cau: q.cau, luaChon: q.luaChon, dapAn: q.dapAn, emoji: q.emoji, nhom: q.nhom, giai: q.giai, doc: q.doc}));
+    .map(q => ({cau: q.cau, luaChon: q.luaChon, dapAn: q.dapAn, emoji: q.emoji, nhom: q.nhom, giai: q.giai, doc: q.doc, docEn: q.docEn}));
   if(cauHoi.length===0){ toast('Bài này chưa có câu hỏi.'); return; }
   current = {mon:monId, game:gameId, cauHoi, viTri:0, dung:0};
   renderCauHoi();
@@ -849,10 +851,12 @@ function renderCauHoi(){
         '<div class="o-dap-an"><button class="dap-an" onclick="chonDapAn(this,'+i+')">'+da+'</button><button class="nut-loa" type="button" onclick="event.stopPropagation(); docDapAn('+i+')">🔊</button></div>').join('') + '</div>'
     + '<div class="phan-hoi" id="phanHoi"></div>'
     + '<div class="ke-trang"><button class="nut nut-xanh" id="nutTiep" style="display:none" onclick="cauTiepTheo()">Câu tiếp theo ➡️</button></div></div>';
-  docCauHoiHienTai();
+  const tokenHien = _docToken;
+  setTimeout(function(){ if(tokenHien !== _docToken) return; docCauHoiHienTai(); }, 150);
   hienManHinh('manHinhGame');
 }
 function chonDapAn(nut, chiSo){
+  _docToken++;
   const q = current.cauHoi[current.viTri];
   const dung = (q.luaChon[chiSo] === q.dapAn);
   document.querySelectorAll('.dap-an').forEach(b=>b.disabled=true);
@@ -869,7 +873,8 @@ function chonDapAn(nut, chiSo){
     document.querySelectorAll('.dap-an').forEach(b=>{ if(b.textContent==String(q.dapAn)) b.classList.add('dung'); });
     document.getElementById('phanHoi').textContent = '💪 Chưa đúng rồi, đáp án đúng là: ' + q.dapAn + (q.giai ? ' - ' + q.giai : '') + '. Bé thử lại câu sau nhé!';
   }
-  docPhanHoi(q, dung);
+  const tokenPhanHoi = _docToken;
+  setTimeout(function(){ if(tokenPhanHoi !== _docToken) return; docPhanHoi(q, dung); }, 400);
   luu(); kiemTraHuyHieu(); capNhatTieuDe();
   document.getElementById('nutTiep').style.display='inline-block';
 }
@@ -922,7 +927,7 @@ function renderChuCai(){
   hienManHinh('manHinhGame');
 }
 function xemChu(c){
-  amClick(); docTiengViet(c);
+  docTiengViet(c);
   document.getElementById('xemChuChiTiet').innerHTML =
     '<div class="chu-lon">'+c+'</div><p style="font-size:24px">Ví dụ: <b>'+VI_DU_CHU[c]+'</b></p>'
     + '<button class="nut nut-vang" onclick="docTiengViet(\''+VI_DU_CHU[c]+'\')">🔊 Nghe ví dụ</button>';
@@ -944,11 +949,11 @@ function ghepThu(){
   const tim = GHEP_VAN.find(g=>g.tu===tu);
   const el = document.getElementById('ketQuaGhep');
   if(tim){
-    amDung(); docTiengViet(tim.tu);
+    docTiengViet(tim.tu);
     state.stars+=1; state.points+=10; luu(); kiemTraHuyHieu(); capNhatTieuDe();
     el.innerHTML = '<p style="font-size:30px">🎉 <b>'+chonOn+' + '+chonAm+' = '+tim.tu+'</b></p><p>'+tim.nghia+'. Bé được +1 sao!</p>';
   } else {
-    amClick(); docTiengViet(tu);
+    docTiengViet(tu);
     el.innerHTML = '<p style="font-size:30px">👏 <b>'+chonOn+' + '+chonAm+' = '+tu+'</b></p><p>Bé đã ghép được một tiếng mới! Hãy thử ghép “ba”, “me”, “ca” xem có nghĩa gì nhé!</p>';
   }
 }

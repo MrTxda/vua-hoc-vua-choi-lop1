@@ -43,6 +43,24 @@ python3 build.py
 File mới sẽ ghi đè `dist/vua-hoc-vua-choi-lop1-day-du.html`.
 **Không sửa file dist bằng tay** — lần build sau sẽ ghi đè mất.
 
+## Tự kiểm tra âm thanh trước mỗi lần push (bắt buộc từ 2026-10-27)
+
+Lỗi âm thanh ngày 2026-10-27 chỉ lộ khi chạy đúng luồng chơi thật
+(kiểm tra ngân hàng thì vẫn đúng): bài Nghe tiếng Anh bị rơi mất
+từ cần đọc vì `batDauGame` không giữ `docEn`, beep đè lên giọng đọc,
+AudioContext không resume khi bắt đầu ở trạng thái suspended.
+Vì vậy, sau mỗi lần sửa, chạy trước khi push:
+
+```bash
+python3 src/build.py
+node check-audio.js
+```
+
+Chỉ push khi kết quả là `AUDIO CHECK: ALL PASS`. File kiểm tra này
+mô phỏng AudioContext/SpeechSynthesis/DOM và chạy đúng
+`batDauGame` → `renderCauHoi` → `chonDapAn` → `cauTiepTheo`,
+không chỉ đếm câu trong ngân hàng.
+
 ## Thêm một môn mới
 
 1. Tạo `src/data-tenmon.js` theo mẫu `data-daoduc.js`:
