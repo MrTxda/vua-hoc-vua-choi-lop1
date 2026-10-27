@@ -17,7 +17,7 @@ Không cần server, không cần mạng (trừ giọng đọc có sẵn của t
   Hạn chế: bản Pages không có server `/tts`, nên trên máy tính
   không có giọng Tiếng Việt thì giọng đọc sẽ về giọng máy.
 - **Link server tạm, có giọng Việt cho máy tính:**
-  https://34fb7a82c4864e.lhr.life/ (xem `SERVER-TAM.md`).
+  https://30679a5a27f50d.lhr.life/ (xem `SERVER-TAM.md`).
   Link này mở được từ nhiều máy, không cần đăng nhập, nhưng chỉ
   là tạm: server chết khi máy chủ khởi động lại, URL đổi mỗi lần
   tunnel khởi động lại, và máy chủ này không phải server sản xuất

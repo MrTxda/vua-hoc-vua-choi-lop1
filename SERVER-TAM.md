@@ -2,9 +2,9 @@
 
 ## URL tạm (kiểm chứng ngày 2026-10-27)
 
-- https://34fb7a82c4864e.lhr.life/
+- https://30679a5a27f50d.lhr.life/
 - Mở link trên là vào thẳng app (index chuyển hướng tới file dist mới nhất).
-- Kiểm tra server còn sống: https://34fb7a82c4864e.lhr.life/health
+- Kiểm tra server còn sống: https://30679a5a27f50d.lhr.life/health
   phải trả `{"ok": true, ...}`.
 
 ## Vì sao dùng server tạm?
@@ -22,10 +22,11 @@ https://mrtxda.github.io/vua-hoc-vua-choi-lop1/
 - Server: `server.py`, cổng **20200**, bind 127.0.0.1, phục vụ thư mục gốc
   của dự án này (`index.html` + `dist/`).
 - Tunnel: `localhost.run` qua key `~/.ssh/lr_tunnel`, URL ghi vào
-  `server-url.txt`. Với key đã đăng ký này, URL đã giữ nguyên qua lần
-  restart ngày 2026-10-27 (vẫn là `https://34fb7a82c4864e.lhr.life/`),
-  nhưng vẫn coi là tạm: nếu tunnel khởi động lại mà URL đổi thì lấy
-  URL mới trong `server-url.txt`, không dùng URL cũ.
+  `server-url.txt`. URL này KHÔNG ổn định: qua restart ngày 2026-10-27
+  nó giữ nguyên một lần, nhưng đến 21:20 cùng ngày tunnel tự ngắt vì
+  "tunnel activity timeout", kết nối lại ra URL mới
+  `https://30679a5a27f50d.lhr.life/` (URL cũ `34fb...` đã chết).
+  Luôn lấy URL hiện tại trong `server-url.txt`, không dùng URL cũ.
 - **KHÔNG đụng tới dịch vụ dịch AutoCAD**: dịch vụ đó chạy cổng 20128,
   tunnel tunnl.gg key `tunnl_dich`, URL cố định
   https://ruby-river-f322d336.tunnl.gg — server tạm này dùng cổng và key
@@ -62,7 +63,7 @@ Sau đó đọc URL mới trong `server-url.txt` (URL cũ sẽ hết hiệu lự
 
 ## Chia sẻ cho nhiều máy (2026-10-27)
 
-Link https://34fb7a82c4864e.lhr.life/ mở được từ nhiều máy, không
+Link https://30679a5a27f50d.lhr.life/ mở được từ nhiều máy, không
 cần đăng nhập, vì tunnel localhost.run đưa cổng 20200 ra Internet.
 Trước khi chia sẻ rộng đã kiểm tra và chặn: `.git` (từng trả 200),
 liệt kê thư mục, `tts-cache/`, `server-url.txt` — tất cả giờ trả 404,
