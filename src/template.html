@@ -426,7 +426,7 @@ let state = null;
 try{ state = JSON.parse(localStorage.getItem(KHOA_LUU) || 'null'); }catch(e){ state = null; }
 if(!state || typeof state !== 'object'){
   state = { stars:0, points:0, correct:0, total:0, stickers:[], badges:[],
-    history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, amnhac:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[], daLamBai:false };
+    history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[], daLamBai:false };
 }
 function luu(){ try{ localStorage.setItem(KHOA_LUU, JSON.stringify(state)); }catch(e){} }
 const DS_STICKER = ['🦄','🦁','🐳','🦋','🌈','🚀','🍓','🐼','🦊','🐯','🌸','⭐'];
@@ -821,7 +821,6 @@ function batDauGame(monId, gameId){
   if(monId==='viet' && gameId==='chu') return renderChuCai();
   if(monId==='viet' && gameId==='ghep') return renderGhepVan();
   if(monId==='viet' && gameId==='doc') return renderTapDoc();
-  if(gameId==='notnhac' && typeof renderNotNhac === 'function') return renderNotNhac();
   if(gameId==='ve' && typeof renderVe === 'function') return renderVe();
   if(gameId==='vandong' && typeof renderVanDong === 'function') return renderVanDong();
   if(gameId==='checklist' && typeof renderChecklist === 'function') return renderChecklist();
@@ -1004,7 +1003,7 @@ function doiMonPhuHuynh(monId, choPhep){
 function datLaiTienDo(){
   if(!confirm('Phụ huynh có chắc muốn xóa toàn bộ sao, điểm, huy hiệu và lịch sử của bé không?')) return;
   localStorage.removeItem(KHOA_LUU);
-  state = { stars:0, points:0, correct:0, total:0, stickers:[], badges:[], history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, amnhac:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[], daLamBai:false };
+  state = { stars:0, points:0, correct:0, total:0, stickers:[], badges:[], history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[], daLamBai:false };
   luu(); veTrangChu(); toast('Đã đặt lại tiến độ.');
 }
 

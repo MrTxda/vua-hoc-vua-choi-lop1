@@ -1,10 +1,11 @@
 // ============================================================
 // MÔN TIẾNG ANH (Global Success lớp 1, từ vựng cơ bản)
-// - 30 câu đọc từ vựng: nhìn hình, chọn từ tiếng Anh đúng.
-// - 30 câu nghe: nghe từ tiếng Anh (giọng máy en-US, docEn) rồi
-//   chọn đúng hình + từ. Từ vựng cơ bản (màu, số, con vật,
-//   gia đình, cơ thể, đồ dùng học tập) là từ thông dụng, không
-//   chép bài đọc / lời thoại trong sách.
+// - 107 từ: mỗi từ có 1 câu đọc từ vựng (nhìn hình, chọn từ
+//   tiếng Anh đúng) + 1 câu nghe (nghe từ tiếng Anh, giọng máy
+//   en-US, docEn, rồi chọn đúng hình + từ) = 214 câu.
+// - Từ vựng cơ bản (màu, số, con vật, gia đình, cơ thể, đồ
+//   dùng học tập, đồ ăn, đồ chơi, thời tiết, quần áo, cảm xúc)
+//   là từ thông dụng, không chép bài đọc / lời thoại trong sách.
 // ============================================================
 const TIENGANH_TUVUNG = [
   {emoji:'🔴', en:'red', vn:'màu đỏ'}, {emoji:'🔵', en:'blue', vn:'màu xanh dương'}, {emoji:'🟡', en:'yellow', vn:'màu vàng'},
@@ -27,18 +28,33 @@ const TIENGANH_TUVUNG = [
   {emoji:'🐘', en:'elephant', vn:'con voi'}, {emoji:'🐵', en:'monkey', vn:'con khỉ'}, {emoji:'🦁', en:'lion', vn:'con sư tử'},
   {emoji:'7️⃣', en:'seven', vn:'số bảy'}, {emoji:'8️⃣', en:'eight', vn:'số tám'}, {emoji:'9️⃣', en:'nine', vn:'số chín'},
   {emoji:'🔟', en:'ten', vn:'số mười'}, {emoji:'🦆', en:'duck', vn:'con vịt'}, {emoji:'🖊️', en:'pen', vn:'bút mực'},
+,
+  {emoji:'🩷', en:'pink', vn:'màu hồng'}, {emoji:'⚫', en:'black', vn:'màu đen'}, {emoji:'⚪', en:'white', vn:'màu trắng'}, {emoji:'🟤', en:'brown', vn:'màu nâu'},
+  {emoji:'🐰', en:'rabbit', vn:'con thỏ'}, {emoji:'🐸', en:'frog', vn:'con ếch'}, {emoji:'🐻', en:'bear', vn:'con gấu'}, {emoji:'🐯', en:'tiger', vn:'con hổ'},
+  {emoji:'🐴', en:'horse', vn:'con ngựa'}, {emoji:'🐄', en:'cow', vn:'con bò'}, {emoji:'🐭', en:'mouse', vn:'con chuột'}, {emoji:'🐍', en:'snake', vn:'con rắn'},
+  {emoji:'👶', en:'baby', vn:'em bé'}, {emoji:'🧒', en:'friend', vn:'bạn'},
+  {emoji:'👄', en:'mouth', vn:'miệng'}, {emoji:'🦷', en:'tooth', vn:'răng'}, {emoji:'💪', en:'arm', vn:'cánh tay'}, {emoji:'🦵', en:'leg', vn:'chân'},
+  {emoji:'📏', en:'ruler', vn:'thước kẻ'}, {emoji:'🖍️', en:'crayon', vn:'bút màu'}, {emoji:'📓', en:'notebook', vn:'quyển vở'}, {emoji:'🪟', en:'window', vn:'cửa sổ'},
+  {emoji:'🍞', en:'bread', vn:'bánh mì'}, {emoji:'🥚', en:'egg', vn:'quả trứng'}, {emoji:'🍇', en:'grape', vn:'quả nho'}, {emoji:'🍰', en:'cake', vn:'bánh kem'},
+  {emoji:'💧', en:'water', vn:'nước'}, {emoji:'🧃', en:'juice', vn:'nước ép'}, {emoji:'🍬', en:'candy', vn:'kẹo'},
+  {emoji:'🪆', en:'doll', vn:'búp bê'}, {emoji:'🪁', en:'kite', vn:'con diều'}, {emoji:'🤖', en:'robot', vn:'rô bốt'}, {emoji:'🚂', en:'train', vn:'tàu hỏa'},
+  {emoji:'⛵', en:'boat', vn:'thuyền'}, {emoji:'🧸', en:'teddy', vn:'gấu bông'},
+  {emoji:'🌧️', en:'rain', vn:'mưa'}, {emoji:'☁️', en:'cloud', vn:'mây'}, {emoji:'🌳', en:'tree', vn:'cây'},
+  {emoji:'👕', en:'shirt', vn:'áo sơ mi'}, {emoji:'👗', en:'dress', vn:'váy'}, {emoji:'🧢', en:'hat', vn:'mũ'}, {emoji:'👟', en:'shoes', vn:'giày'},
+  {emoji:'😢', en:'sad', vn:'buồn'}, {emoji:'😠', en:'angry', vn:'giận'}, {emoji:'🥶', en:'cold', vn:'lạnh'}, {emoji:'🥵', en:'hot', vn:'nóng'},
+  {emoji:'🌄', en:'good morning', vn:'chào buổi sáng'},
 ];
-// Lưu ý: danh sách trên có 60 mục; 30 mục đầu làm bài đọc, 30 mục sau làm bài nghe.
-MON_HOC.push({id:'tienganh', ten:'Tiếng Anh', icon:'🔤', lop:'mon-viet', moTa:'Từ vựng cơ bản: màu sắc, số, con vật, gia đình và đồ dùng học tập!'});
+// Mỗi từ trong danh sách đều sinh ra 1 câu đọc + 1 câu nghe, nên ngân hàng luôn cân bằng 2 dạng bài.
+MON_HOC.push({id:'tienganh', ten:'Tiếng Anh', icon:'🔤', lop:'mon-viet', moTa:'Từ vựng cơ bản: màu sắc, số, con vật, gia đình, đồ ăn, đồ chơi và nhiều hơn nữa!'});
 GAME_THEO_MON.tienganh = [
   {id:'tuvung', ten:'🔤 Từ vựng tiếng Anh', moTa:'Nhìn hình, chọn từ tiếng Anh đúng.'},
   {id:'nghe', ten:'🔊 Nghe và chọn hình', moTa:'Nghe từ tiếng Anh rồi chọn đúng hình.'},
 ];
-TIENGANH_TUVUNG.slice(0, 30).forEach(it => {
+TIENGANH_TUVUNG.forEach(it => {
   const sai = tron(TIENGANH_TUVUNG.filter(x => x.en !== it.en).map(x => x.en)).slice(0, 3);
   NGAN_HANG.push({mon:'tienganh', game:'tuvung', cau:'Từ tiếng Anh của hình trên là gì?', dapAn:it.en, luaChon:tron([it.en].concat(sai)), emoji:it.emoji, giai:it.en + ' nghĩa là ' + it.vn});
 });
-TIENGANH_TUVUNG.slice(30).forEach(it => {
+TIENGANH_TUVUNG.forEach(it => {
   const sai = TIENGANH_TUVUNG.filter(x => x.en !== it.en).map(x => x.emoji + ' ' + x.en);
   const saiChon = tron(sai).slice(0, 3);
   const dap = it.emoji + ' ' + it.en;

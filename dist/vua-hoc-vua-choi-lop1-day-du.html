@@ -426,7 +426,7 @@ let state = null;
 try{ state = JSON.parse(localStorage.getItem(KHOA_LUU) || 'null'); }catch(e){ state = null; }
 if(!state || typeof state !== 'object'){
   state = { stars:0, points:0, correct:0, total:0, stickers:[], badges:[],
-    history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, amnhac:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[], daLamBai:false };
+    history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[], daLamBai:false };
 }
 function luu(){ try{ localStorage.setItem(KHOA_LUU, JSON.stringify(state)); }catch(e){} }
 const DS_STICKER = ['🦄','🦁','🐳','🦋','🌈','🚀','🍓','🐼','🦊','🐯','🌸','⭐'];
@@ -931,72 +931,6 @@ function di2048(huong){
 }
 
 
-/* ===== data-amnhac.js (gộp bởi build.py) ===== */
-// ============================================================
-// MÔN ÂM NHẠC - 30 câu trắc nghiệm + bài tương tác chơi nốt nhạc
-// Bài tương tác dùng Web Audio API có sẵn (tone()), không dùng
-// file nhạc của sách, không chép lời bài hát trong sách.
-// ============================================================
-const AMNHAC_Q = [
-  {nhom:'Nhạc cụ', emoji:'🥁', cau:'Hình này là nhạc cụ gì?', dung:'Trống', sai:['Đàn guitar','Sáo']},
-  {nhom:'Nhạc cụ', emoji:'🎸', cau:'Hình này là nhạc cụ gì?', dung:'Đàn guitar', sai:['Trống','Kèn']},
-  {nhom:'Nhạc cụ', emoji:'🎹', cau:'Hình này là nhạc cụ gì?', dung:'Đàn piano', sai:['Sáo','Trống']},
-  {nhom:'Nhạc cụ', emoji:'🎺', cau:'Hình này là nhạc cụ gì?', dung:'Kèn', sai:['Đàn guitar','Trống']},
-  {nhom:'Nhạc cụ', emoji:'🪈', cau:'Nhạc cụ nào thổi bằng miệng?', dung:'Sáo', sai:['Trống','Đàn piano']},
-  {nhom:'Nhạc cụ', emoji:'🥁', cau:'Trống được chơi bằng cách nào?', dung:'Gõ', sai:['Thổi','Kéo']},
-  {nhom:'Nhạc cụ', emoji:'🎸', cau:'Đàn guitar được chơi bằng cách nào?', dung:'Gảy dây', sai:['Thổi','Gõ mạnh']},
-  {nhom:'Cao thấp', emoji:'🐦', cau:'Tiếng chim hót thường như thế nào?', dung:'Cao và trong', sai:['Trầm và nặng','Rất to và ồn']},
-  {nhom:'Cao thấp', emoji:'🐻', cau:'Tiếng gầm của gấu thường như thế nào?', dung:'Trầm và nặng', sai:['Cao và trong','Nhẹ như chim']},
-  {nhom:'Nhanh chậm', emoji:'🐇', cau:'Nhạc nhanh giống như con vật nào chạy?', dung:'Thỏ chạy nhanh', sai:['Rùa bò chậm','Gấu ngủ']},
-  {nhom:'Nhanh chậm', emoji:'🐢', cau:'Nhạc chậm giống như con vật nào?', dung:'Rùa bò chậm', sai:['Thỏ chạy nhanh','Chim bay nhanh']},
-  {nhom:'To nhỏ', emoji:'🔊', cau:'Khi hát to, giọng bé như thế nào?', dung:'To và rõ', sai:['Nhỏ không nghe thấy','Im lặng']},
-  {nhom:'To nhỏ', emoji:'🔈', cau:'Khi hát nhỏ, giọng bé như thế nào?', dung:'Nhỏ nhẹ', sai:['Hét thật to','Im lặng luôn']},
-  {nhom:'Hát', emoji:'🎤', cau:'Trước khi hát, bé nên làm gì?', dung:'Đứng ngay ngắn, hát rõ lời', sai:['Chạy quanh lớp','Hét to không rõ lời']},
-  {nhom:'Hát', emoji:'👏', cau:'Bạn hát hay, bé nên làm gì?', dung:'Vỗ tay khen bạn', sai:['Trêu bạn','Bịt tai lại']},
-  {nhom:'Hát', emoji:'🎵', cau:'Bài hát có gì?', dung:'Giai điệu và lời ca', sai:['Chỉ có tiếng ồn','Chỉ có hình vẽ']},
-  {nhom:'Nhịp', emoji:'👏', cau:'Vỗ tay theo nhịp giúp bé làm gì?', dung:'Hát đúng nhịp', sai:['Hát nhanh hơn','Không cần nghe nhạc']},
-  {nhom:'Nhịp', emoji:'🥁', cau:'Tiếng trống đều đặn giúp bé cảm nhận gì?', dung:'Nhịp của bài hát', sai:['Màu sắc','Hình dạng']},
-  {nhom:'Nghe', emoji:'👂', cau:'Nghe nhạc, bé nên làm gì?', dung:'Lắng nghe và cảm nhận', sai:['Hét to át nhạc','Bịt tai lại']},
-  {nhom:'Nghe', emoji:'🌧️', cau:'Âm thanh mưa rơi thường như thế nào?', dung:'Nhẹ nhàng, đều đều', sai:['Rất to và chói','Im lặng']},
-  {nhom:'Nghe', emoji:'🌊', cau:'Âm thanh sóng biển thường như thế nào?', dung:'Ào ào, lúc to lúc nhỏ', sai:['Im lặng','Chỉ có một nốt']},
-  {nhom:'Vận động', emoji:'💃', cau:'Nghe nhạc vui, bé có thể làm gì?', dung:'Nhún nhảy theo nhạc', sai:['Ngồi im không cử động','Chạy ra khỏi lớp']},
-  {nhom:'Vận động', emoji:'🕺', cau:'Múa theo nhạc giúp bé làm gì?', dung:'Vận động khỏe và vui', sai:['Mệt và buồn','Không học được gì']},
-  {nhom:'Âm thanh', emoji:'🔔', cau:'Tiếng chuông thường như thế nào?', dung:'Trong và vang', sai:['Trầm và nặng','Ồn ào']},
-  {nhom:'Âm thanh', emoji:'📣', cau:'Tiếng loa phóng thanh thường như thế nào?', dung:'To và rõ', sai:['Nhỏ không nghe','Chỉ có một nốt']},
-  {nhom:'Giữ gìn', emoji:'🎸', cau:'Chơi đàn xong, bé nên làm gì?', dung:'Để đàn gọn gàng', sai:['Ném đàn xuống đất','Để đàn ngoài mưa']},
-  {nhom:'Giữ gìn', emoji:'🥁', cau:'Chơi trống xong, bé nên làm gì?', dung:'Để trống đúng chỗ', sai:['Đập trống thật mạnh','Mang trống về nhà']},
-  {nhom:'Tập thể', emoji:'🎶', cau:'Cả lớp cùng hát, bé nên làm gì?', dung:'Hát cùng các bạn', sai:['Hát một mình thật to','Không hát gì']},
-  {nhom:'Tập thể', emoji:'👫', cau:'Hát tốp ca nghĩa là gì?', dung:'Nhiều bạn cùng hát', sai:['Một bạn hát','Không ai hát']},
-  {nhom:'Cảm xúc', emoji:'😊', cau:'Nghe bài hát vui, bé cảm thấy thế nào?', dung:'Vui vẻ', sai:['Buồn ngủ','Sợ hãi']},
-];
-MON_HOC.push({id:'amnhac', ten:'Âm nhạc', icon:'🎵', lop:'mon-viet', moTa:'Nghe nhạc cụ, cảm nhận cao thấp, nhanh chậm và chơi nốt nhạc!'});
-GAME_THEO_MON.amnhac = [
-  {id:'quiz', ten:'🎵 Trắc nghiệm Âm nhạc', moTa:'30 câu về nhạc cụ, cao thấp, nhanh chậm.'},
-  {id:'notnhac', ten:'🎹 Chơi nốt nhạc', moTa:'Bấm từng nốt Đô Rê Mi để nghe và chơi giai điệu.'},
-];
-AMNHAC_Q.forEach(it => {
-  NGAN_HANG.push({mon:'amnhac', game:'quiz', cau:it.cau, dapAn:it.dung, luaChon:tron([it.dung].concat(it.sai)), nhom:it.nhom, emoji:it.emoji});
-});
-// Bài tương tác: chơi nốt nhạc bằng Web Audio (tone() có sẵn ở lõi)
-function renderNotNhac(){
-  const not = [['Đô','C',261],['Rê','D',293],['Mi','E',329],['Fa','F',349],['Sol','G',392],['La','A',440],['Si','B',493]];
-  document.getElementById('noiDungGame').innerHTML =
-    '<div class="khung-bai"><h2>🎹 Chơi nốt nhạc</h2><p class="mo-ta">Bấm vào từng nốt để nghe. Sau đó bấm “Chơi giai điệu vui” để nghe một đoạn nhạc ngắn!</p>'
-    + '<div>' + not.map(n => '<span class="chu-cai" style="width:74px" onclick="tone(' + n[2] + ',0.5)">' + n[0] + '</span>').join('') + '</div>'
-    + '<div class="ke-trang"><button class="nut nut-hong" onclick="choiGiaiDieu()">🎶 Chơi giai điệu vui</button>'
-    + '<button class="nut nut-xanh" onclick="hoanThanhNhac()">✅ Bé chơi xong! Nhận sao</button></div></div>';
-  hienManHinh('manHinhGame');
-}
-function choiGiaiDieu(){
-  [261,329,392,523,392,329,261].forEach((f,i) => tone(f, 0.35, 'triangle', i * 0.3));
-}
-function hoanThanhNhac(){
-  amHoanThanh(); state.stars += 3; state.points += 20; luu(); kiemTraHuyHieu(); capNhatTieuDe();
-  toast('🎉 Tuyệt vời! Bé được +3 sao vì đã chơi nốt nhạc!');
-  veTrangChu();
-}
-
-
 /* ===== data-daoduc.js (gộp bởi build.py) ===== */
 // ============================================================
 // MÔN ĐẠO ĐỨC - 40 câu trắc nghiệm (bài tập tự biên, không sao
@@ -1348,11 +1282,12 @@ function hoanThanhVanDong(){
 /* ===== data-tienganh.js (gộp bởi build.py) ===== */
 // ============================================================
 // MÔN TIẾNG ANH (Global Success lớp 1, từ vựng cơ bản)
-// - 30 câu đọc từ vựng: nhìn hình, chọn từ tiếng Anh đúng.
-// - 30 câu nghe: nghe từ tiếng Anh (giọng máy en-US, docEn) rồi
-//   chọn đúng hình + từ. Từ vựng cơ bản (màu, số, con vật,
-//   gia đình, cơ thể, đồ dùng học tập) là từ thông dụng, không
-//   chép bài đọc / lời thoại trong sách.
+// - 107 từ: mỗi từ có 1 câu đọc từ vựng (nhìn hình, chọn từ
+//   tiếng Anh đúng) + 1 câu nghe (nghe từ tiếng Anh, giọng máy
+//   en-US, docEn, rồi chọn đúng hình + từ) = 214 câu.
+// - Từ vựng cơ bản (màu, số, con vật, gia đình, cơ thể, đồ
+//   dùng học tập, đồ ăn, đồ chơi, thời tiết, quần áo, cảm xúc)
+//   là từ thông dụng, không chép bài đọc / lời thoại trong sách.
 // ============================================================
 const TIENGANH_TUVUNG = [
   {emoji:'🔴', en:'red', vn:'màu đỏ'}, {emoji:'🔵', en:'blue', vn:'màu xanh dương'}, {emoji:'🟡', en:'yellow', vn:'màu vàng'},
@@ -1375,18 +1310,33 @@ const TIENGANH_TUVUNG = [
   {emoji:'🐘', en:'elephant', vn:'con voi'}, {emoji:'🐵', en:'monkey', vn:'con khỉ'}, {emoji:'🦁', en:'lion', vn:'con sư tử'},
   {emoji:'7️⃣', en:'seven', vn:'số bảy'}, {emoji:'8️⃣', en:'eight', vn:'số tám'}, {emoji:'9️⃣', en:'nine', vn:'số chín'},
   {emoji:'🔟', en:'ten', vn:'số mười'}, {emoji:'🦆', en:'duck', vn:'con vịt'}, {emoji:'🖊️', en:'pen', vn:'bút mực'},
+,
+  {emoji:'🩷', en:'pink', vn:'màu hồng'}, {emoji:'⚫', en:'black', vn:'màu đen'}, {emoji:'⚪', en:'white', vn:'màu trắng'}, {emoji:'🟤', en:'brown', vn:'màu nâu'},
+  {emoji:'🐰', en:'rabbit', vn:'con thỏ'}, {emoji:'🐸', en:'frog', vn:'con ếch'}, {emoji:'🐻', en:'bear', vn:'con gấu'}, {emoji:'🐯', en:'tiger', vn:'con hổ'},
+  {emoji:'🐴', en:'horse', vn:'con ngựa'}, {emoji:'🐄', en:'cow', vn:'con bò'}, {emoji:'🐭', en:'mouse', vn:'con chuột'}, {emoji:'🐍', en:'snake', vn:'con rắn'},
+  {emoji:'👶', en:'baby', vn:'em bé'}, {emoji:'🧒', en:'friend', vn:'bạn'},
+  {emoji:'👄', en:'mouth', vn:'miệng'}, {emoji:'🦷', en:'tooth', vn:'răng'}, {emoji:'💪', en:'arm', vn:'cánh tay'}, {emoji:'🦵', en:'leg', vn:'chân'},
+  {emoji:'📏', en:'ruler', vn:'thước kẻ'}, {emoji:'🖍️', en:'crayon', vn:'bút màu'}, {emoji:'📓', en:'notebook', vn:'quyển vở'}, {emoji:'🪟', en:'window', vn:'cửa sổ'},
+  {emoji:'🍞', en:'bread', vn:'bánh mì'}, {emoji:'🥚', en:'egg', vn:'quả trứng'}, {emoji:'🍇', en:'grape', vn:'quả nho'}, {emoji:'🍰', en:'cake', vn:'bánh kem'},
+  {emoji:'💧', en:'water', vn:'nước'}, {emoji:'🧃', en:'juice', vn:'nước ép'}, {emoji:'🍬', en:'candy', vn:'kẹo'},
+  {emoji:'🪆', en:'doll', vn:'búp bê'}, {emoji:'🪁', en:'kite', vn:'con diều'}, {emoji:'🤖', en:'robot', vn:'rô bốt'}, {emoji:'🚂', en:'train', vn:'tàu hỏa'},
+  {emoji:'⛵', en:'boat', vn:'thuyền'}, {emoji:'🧸', en:'teddy', vn:'gấu bông'},
+  {emoji:'🌧️', en:'rain', vn:'mưa'}, {emoji:'☁️', en:'cloud', vn:'mây'}, {emoji:'🌳', en:'tree', vn:'cây'},
+  {emoji:'👕', en:'shirt', vn:'áo sơ mi'}, {emoji:'👗', en:'dress', vn:'váy'}, {emoji:'🧢', en:'hat', vn:'mũ'}, {emoji:'👟', en:'shoes', vn:'giày'},
+  {emoji:'😢', en:'sad', vn:'buồn'}, {emoji:'😠', en:'angry', vn:'giận'}, {emoji:'🥶', en:'cold', vn:'lạnh'}, {emoji:'🥵', en:'hot', vn:'nóng'},
+  {emoji:'🌄', en:'good morning', vn:'chào buổi sáng'},
 ];
-// Lưu ý: danh sách trên có 60 mục; 30 mục đầu làm bài đọc, 30 mục sau làm bài nghe.
-MON_HOC.push({id:'tienganh', ten:'Tiếng Anh', icon:'🔤', lop:'mon-viet', moTa:'Từ vựng cơ bản: màu sắc, số, con vật, gia đình và đồ dùng học tập!'});
+// Mỗi từ trong danh sách đều sinh ra 1 câu đọc + 1 câu nghe, nên ngân hàng luôn cân bằng 2 dạng bài.
+MON_HOC.push({id:'tienganh', ten:'Tiếng Anh', icon:'🔤', lop:'mon-viet', moTa:'Từ vựng cơ bản: màu sắc, số, con vật, gia đình, đồ ăn, đồ chơi và nhiều hơn nữa!'});
 GAME_THEO_MON.tienganh = [
   {id:'tuvung', ten:'🔤 Từ vựng tiếng Anh', moTa:'Nhìn hình, chọn từ tiếng Anh đúng.'},
   {id:'nghe', ten:'🔊 Nghe và chọn hình', moTa:'Nghe từ tiếng Anh rồi chọn đúng hình.'},
 ];
-TIENGANH_TUVUNG.slice(0, 30).forEach(it => {
+TIENGANH_TUVUNG.forEach(it => {
   const sai = tron(TIENGANH_TUVUNG.filter(x => x.en !== it.en).map(x => x.en)).slice(0, 3);
   NGAN_HANG.push({mon:'tienganh', game:'tuvung', cau:'Từ tiếng Anh của hình trên là gì?', dapAn:it.en, luaChon:tron([it.en].concat(sai)), emoji:it.emoji, giai:it.en + ' nghĩa là ' + it.vn});
 });
-TIENGANH_TUVUNG.slice(30).forEach(it => {
+TIENGANH_TUVUNG.forEach(it => {
   const sai = TIENGANH_TUVUNG.filter(x => x.en !== it.en).map(x => x.emoji + ' ' + x.en);
   const saiChon = tron(sai).slice(0, 3);
   const dap = it.emoji + ' ' + it.en;
@@ -1509,7 +1459,6 @@ function batDauGame(monId, gameId){
   if(monId==='viet' && gameId==='chu') return renderChuCai();
   if(monId==='viet' && gameId==='ghep') return renderGhepVan();
   if(monId==='viet' && gameId==='doc') return renderTapDoc();
-  if(gameId==='notnhac' && typeof renderNotNhac === 'function') return renderNotNhac();
   if(gameId==='ve' && typeof renderVe === 'function') return renderVe();
   if(gameId==='vandong' && typeof renderVanDong === 'function') return renderVanDong();
   if(gameId==='checklist' && typeof renderChecklist === 'function') return renderChecklist();
@@ -1692,7 +1641,7 @@ function doiMonPhuHuynh(monId, choPhep){
 function datLaiTienDo(){
   if(!confirm('Phụ huynh có chắc muốn xóa toàn bộ sao, điểm, huy hiệu và lịch sử của bé không?')) return;
   localStorage.removeItem(KHOA_LUU);
-  state = { stars:0, points:0, correct:0, total:0, stickers:[], badges:[], history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, amnhac:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[], daLamBai:false };
+  state = { stars:0, points:0, correct:0, total:0, stickers:[], badges:[], history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[], daLamBai:false };
   luu(); veTrangChu(); toast('Đã đặt lại tiến độ.');
 }
 
