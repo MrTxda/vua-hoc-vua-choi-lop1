@@ -160,7 +160,10 @@
     .luoi-mon{grid-template-columns:1fr 1fr; gap:12px}
     .the-mon{padding:14px 8px} .the-mon .icon{font-size:48px} .the-mon h3{font-size:20px} .the-mon p{display:none}
     .luoi-thu-vien{grid-template-columns:1fr 1fr}
+    .chan-trang .thanh-diem{flex-wrap:wrap; overflow:visible; justify-content:center}
   }
+  .chan-trang{max-width:980px; margin:0 auto; padding:10px 16px 48px; text-align:center}
+  .chan-trang p{font-size:18px; color:#555; margin:0 0 12px}
   /* Cham tren di dong khong bi phong to / doi 300ms */
   body, button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
 </style>
@@ -168,15 +171,6 @@
 <body>
 <header>
   <h1>🌈 VỪA HỌC VỪA CHƠI - LỚP 1 🎈</h1>
-  <div class="thanh-diem">
-    <span class="chip" id="chipSao">⭐ 0 sao</span>
-    <span class="chip" id="chipDiem">🏆 0 điểm</span>
-    <span class="chip" id="chipSticker">🎁 0 hình dán</span>
-    <button class="nut nut-nho" onclick="veTrangChu(); amClick()">🏠 Trang chủ</button>
-    <button class="nut nut-nho" onclick="moPhuHuynh(); amClick()">👨‍👩‍👧 Chế độ phụ huynh</button>
-    <button class="nut nut-nho" id="nutAm" onclick="doiAmThanh()">🔊 Âm thanh: Bật</button>
-    <button class="nut nut-nho" id="nutGiong" onclick="doiGiongDoc()">🎙️ Giọng đọc: Bật</button>
-  </div>
 </header>
 
 <main>
@@ -223,13 +217,25 @@
       <h3>🕘 Lịch sử làm bài gần nhất</h3>
       <div id="lichSuPhuHuynh"></div>
       <div class="ke-trang" style="justify-content:flex-start">
-        <button class="nut nut-vang" onclick="thuGiongDoc(); amClick()">🔊 Thử giọng đọc</button>
         <button class="nut nut-hong" onclick="datLaiTienDo()">🗑️ Đặt lại toàn bộ tiến độ</button>
         <button class="nut nut-xanh" onclick="veTrangChu(); amClick()">🏠 Về trang chủ</button>
       </div>
     </div>
   </section>
 </main>
+<footer class="chan-trang">
+  <p>Bé học giỏi, bé chơi vui - Tiếng Việt • Toán • Tự nhiên &amp; Xã hội</p>
+  <div class="thanh-diem">
+    <span class="chip" id="chipSao">⭐ 0 sao</span>
+    <span class="chip" id="chipDiem">🏆 0 điểm</span>
+    <span class="chip" id="chipSticker">🎁 0 hình dán</span>
+    <button class="nut nut-nho" onclick="veTrangChu(); amClick()">🏠 Trang chủ</button>
+    <button class="nut nut-nho" onclick="moPhuHuynh(); amClick()">👨‍👩‍👧 Chế độ phụ huynh</button>
+    <button class="nut nut-nho" id="nutAm" onclick="doiAmThanh()">🔊 Âm thanh: Bật</button>
+    <button class="nut nut-nho" id="nutGiong" onclick="doiGiongDoc()">🎙️ Giọng đọc: Bật</button>
+    <button class="nut nut-nho" onclick="thuGiongDoc(); amClick()">🔊 Thử giọng đọc</button>
+  </div>
+</footer>
 <div id="toast"></div>
 <script>
 /* ============================================================
