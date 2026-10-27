@@ -287,7 +287,6 @@ function vietHoaCauHoi(text){
   s = s.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, ' ');
   s = s.replace(/\s*=\s*\?/g, ' bằng bao nhiêu');
   s = s.replace(/(\d+)\s*\?\s*(\d+)/g, '$1 lớn hơn, bé hơn hay bằng $2');
-  s = s.replace(/\?/g, ' ');
   s = s.replace(/\s*\+\s*/g, ' cộng ');
   s = s.replace(/\s*-\s*/g, ' trừ ');
   s = s.replace(/>/g, ' lớn hơn ');
@@ -300,8 +299,12 @@ function vietHoaCauHoi(text){
 function layGiongViet(){
   try{
     const vs = speechSynthesis.getVoices() || [];
-    return vs.find(v => (v.lang || '').toLowerCase().indexOf('vi') === 0)
-        || vs.find(v => (v.lang || '').toLowerCase().indexOf('vi') >= 0)
+    const lang = v => (v.lang || '').toLowerCase();
+    const ten = v => (v.name || '').toLowerCase();
+    return vs.find(v => lang(v) === 'vi-vn' && ten(v).indexOf('google') >= 0)
+        || vs.find(v => lang(v) === 'vi-vn')
+        || vs.find(v => lang(v).indexOf('vi') === 0)
+        || vs.find(v => lang(v).indexOf('vi') >= 0)
         || null;
   }catch(e){ return null; }
 }
@@ -317,7 +320,7 @@ function docTiengViet(text){
     if(!('speechSynthesis' in window)) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(vietHoaCauHoi(text));
-    u.lang = 'vi-VN'; u.rate = 0.9;
+    u.lang = 'vi-VN'; u.rate = 0.85;
     const v = layGiongViet(); if(v) u.voice = v;
     speechSynthesis.speak(u);
   }catch(e){}
@@ -328,7 +331,7 @@ function speakEn(text, huy){
     if(!('speechSynthesis' in window)) return;
     if(huy !== false) speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(String(text));
-    u.lang = 'en-US'; u.rate = 0.9;
+    u.lang = 'en-US'; u.rate = 0.85;
     speechSynthesis.speak(u);
   }catch(e){}
 }
