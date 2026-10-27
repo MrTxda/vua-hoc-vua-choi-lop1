@@ -148,17 +148,26 @@
   .mini-game-card span{font-size:18px; color:#555}
   .mini-game-card.khoa{filter:grayscale(1); opacity:.65; cursor:not-allowed}
   @media (max-width:600px){
-    header h1{font-size:26px} body{font-size:18px}
+    header{padding:12px 10px} header h1{font-size:24px} header p{display:none}
+    body{font-size:18px} main{padding:12px 10px 40px}
+    .thanh-diem{flex-wrap:nowrap; justify-content:flex-start; overflow-x:auto; padding-bottom:4px}
+    .thanh-diem>*{flex-shrink:0}
+    .chip{font-size:16px; padding:7px 12px} .nut-nho{font-size:16px}
     .luoi-dap-an{grid-template-columns:1fr} .cau-hoi{font-size:26px}
-    .thanh-diem{gap:8px} .chip{font-size:17px} .nut-nho{font-size:16px}
-    .khung-bai{padding:18px 14px} .emoji-lon{font-size:64px}
+    .khung-bai{padding:16px 12px} .emoji-lon{font-size:64px}
+    h2{font-size:24px}
+    /* Mon hoc: 2 cot, chi icon + ten, khong mo ta - vua 1 man hinh dien thoai */
+    .luoi-mon{grid-template-columns:1fr 1fr; gap:12px}
+    .the-mon{padding:14px 8px} .the-mon .icon{font-size:48px} .the-mon h3{font-size:20px} .the-mon p{display:none}
+    .luoi-thu-vien{grid-template-columns:1fr 1fr}
   }
+  /* Cham tren di dong khong bi phong to / doi 300ms */
+  body, button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
 </style>
 </head>
 <body>
 <header>
   <h1>🌈 VỪA HỌC VỪA CHƠI - LỚP 1 🎈</h1>
-  <p>Bé học giỏi, bé chơi vui - Tiếng Việt • Toán • Tự nhiên &amp; Xã hội</p>
   <div class="thanh-diem">
     <span class="chip" id="chipSao">⭐ 0 sao</span>
     <span class="chip" id="chipDiem">🏆 0 điểm</span>
@@ -167,37 +176,30 @@
     <button class="nut nut-nho" onclick="moPhuHuynh(); amClick()">👨‍👩‍👧 Chế độ phụ huynh</button>
     <button class="nut nut-nho" id="nutAm" onclick="doiAmThanh()">🔊 Âm thanh: Bật</button>
     <button class="nut nut-nho" id="nutGiong" onclick="doiGiongDoc()">🎙️ Giọng đọc: Bật</button>
-    <button class="nut nut-nho" onclick="thuGiongDoc(); amClick()">🔊 Thử giọng đọc</button>
   </div>
 </header>
 
 <main>
   <!-- ===== DASHBOARD ===== -->
   <section id="manHinhChinh">
-    <h2>👋 Xin chào bé! Hôm nay bé muốn học gì?</h2>
-    <p class="mo-ta">Chạm vào một môn học để bắt đầu. Trả lời đúng được sao vàng, hoàn thành bài được huy hiệu và hình dán!</p>
+    <h2>👋 Hôm nay bé muốn học gì?</h2>
     <div class="luoi-mon" id="luoiMon"></div>
 
     <div class="khung-bai">
-      <h3 style="margin:0">🎯 Mục tiêu hôm nay: 30 sao vàng</h3>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px"><span style="font-weight:bold">🎯 Hôm nay</span><b id="chuTienDo">0 / 30 sao</b></div>
       <div class="thanh-tien-do"><i id="tienDoNgay" style="width:0%"></i></div>
-      <p id="chuTienDo" style="margin:0">Bé đã có 0 / 30 sao. Cố lên!</p>
-      <h3>🏅 Huy hiệu của bé</h3>
-      <div id="khuHuyHieu"><p style="color:#888">Chưa có huy hiệu. Làm đúng câu đầu tiên để nhận huy hiệu đầu tiên nhé!</p></div>
-      <h3>🎁 Bộ sưu tập hình dán</h3>
-      <div id="khuSticker"><p style="color:#888">Hoàn thành một bài chơi để mở hình dán đầu tiên!</p></div>
+      <div id="khuThuong" style="display:none"></div>
     </div>
 
     <div class="khung-bai">
-      <h3 style="margin-top:0">📚 Thư viện câu hỏi</h3>
-      <p id="tongThuVien" class="mo-ta" style="margin-bottom:0">Đang tải thư viện...</p>
-      <div id="khuThuVien" class="luoi-thu-vien"></div>
-      <p style="font-size:17px; color:#555; margin-bottom:0">Mỗi lượt chơi lấy ngẫu nhiên 8-10 câu nên bé chơi lại vẫn gặp câu mới.</p>
+      <details>
+        <summary style="font-weight:bold; cursor:pointer; font-size:21px"><span id="tomTatThuVien">📚 Thư viện câu hỏi</span></summary>
+        <div id="khuThuVien" class="luoi-thu-vien"></div>
+      </details>
     </div>
 
     <div class="khung-bai">
       <h3 style="margin-top:0">🎮 Khu vui chơi thưởng</h3>
-      <p class="mo-ta" style="margin-bottom:0">Hoàn thành 1 bài học là mở khóa khu này. Đạt 30 sao trong ngày là chơi thỏa thích cả 4 trò!</p>
       <div id="khuVuiChoi" style="margin-top:16px"></div>
     </div>
   </section>
@@ -214,17 +216,17 @@
   <section id="manHinhPhuHuynh" style="display:none">
     <div class="khung-bai" style="text-align:left">
       <h2 style="text-align:left; margin-top:0">👨‍👩‍👧 Chế độ phụ huynh</h2>
-      <p>Phụ huynh xem tiến độ của con, chọn môn học cho phép bé chơi, và đặt lại tiến độ khi cần. Đây là bản theo dõi trên chính thiết bị bé đang chơi (dữ liệu lưu ở trình duyệt, không gửi đi đâu).</p>
+      <p>Xem tiến độ và chọn môn cho bé. Dữ liệu chỉ lưu trên thiết bị này.</p>
       <div id="baoCaoPhuHuynh"></div>
       <h3>✅ Chọn môn học cho bé</h3>
       <div id="chonMonPhuHuynh"></div>
       <h3>🕘 Lịch sử làm bài gần nhất</h3>
       <div id="lichSuPhuHuynh"></div>
       <div class="ke-trang" style="justify-content:flex-start">
+        <button class="nut nut-vang" onclick="thuGiongDoc(); amClick()">🔊 Thử giọng đọc</button>
         <button class="nut nut-hong" onclick="datLaiTienDo()">🗑️ Đặt lại toàn bộ tiến độ</button>
         <button class="nut nut-xanh" onclick="veTrangChu(); amClick()">🏠 Về trang chủ</button>
       </div>
-      <p style="color:#666; font-size:17px">Gợi ý cho phụ huynh: mỗi ngày cho bé chơi 15-20 phút, ưu tiên đọc to thành tiếng ở phần Tập đọc, và hỏi lại bé “vì sao con chọn đáp án này?” ở phần Toán đố và Kỹ năng sống.</p>
     </div>
   </section>
 </main>
@@ -444,14 +446,13 @@ function capNhatTieuDe(){
   document.getElementById('chipSticker').textContent = '🎁 ' + state.stickers.length + ' hình dán';
   const pct = Math.min(100, Math.round(state.stars/30*100));
   document.getElementById('tienDoNgay').style.width = pct + '%';
-  document.getElementById('chuTienDo').textContent = 'Bé đã có ' + state.stars + ' / 30 sao. ' + (state.stars>=30 ? '🎉 Đạt mục tiêu hôm nay rồi!' : 'Cố lên!');
-  const khuH = document.getElementById('khuHuyHieu');
-  khuH.innerHTML = state.badges.length ? DS_HUY_HIEU.filter(h=>state.badges.includes(h.id))
-    .map(h=>'<span class="huy-hieu">'+h.icon+' '+h.ten+'</span>').join('')
-    : '<p style="color:#888">Chưa có huy hiệu. Làm đúng câu đầu tiên để nhận huy hiệu đầu tiên nhé!</p>';
-  const khuS = document.getElementById('khuSticker');
-  khuS.innerHTML = state.stickers.length ? state.stickers.map(s=>'<span style="font-size:44px">'+s+'</span>').join(' ')
-    : '<p style="color:#888">Hoàn thành một bài chơi để mở hình dán đầu tiên!</p>';
+  document.getElementById('chuTienDo').textContent = state.stars + ' / 30 sao' + (state.stars>=30 ? ' 🎉' : '');
+  const khuT = document.getElementById('khuThuong');
+  const coThuong = state.badges.length || state.stickers.length;
+  khuT.style.display = coThuong ? 'block' : 'none';
+  if(coThuong) khuT.innerHTML =
+    (state.badges.length ? DS_HUY_HIEU.filter(h=>state.badges.includes(h.id)).map(h=>'<span class="huy-hieu">'+h.icon+' '+h.ten+'</span>').join('') : '')
+    + (state.stickers.length ? ' ' + state.stickers.map(s=>'<span style="font-size:36px">'+s+'</span>').join(' ') : '');
 }
 
 /* ============================================================
@@ -1473,15 +1474,15 @@ function renderThuVien(){
   const dem = MON_HOC.map(m => NGAN_HANG.filter(q => q.mon === m.id).length);
   const lonNhat = Math.max.apply(null, dem.concat([1]));
   el.innerHTML = MON_HOC.map((m, i) => '<div class="the-thu-vien"><span style="font-size:36px">' + m.icon + '</span><b>' + m.ten + '</b><span>' + dem[i].toLocaleString('vi-VN') + ' câu hỏi</span><div class="thanh-tien-do" style="height:12px; margin:10px 0 0"><i style="width:' + Math.round(dem[i] / lonNhat * 100) + '%"></i></div></div>').join('');
-  const tong = document.getElementById('tongThuVien');
-  if(tong) tong.textContent = 'Tổng cộng ' + NGAN_HANG.length.toLocaleString('vi-VN') + ' câu hỏi trong ' + MON_HOC.length + ' môn học.';
+  const tong = document.getElementById('tomTatThuVien');
+  if(tong) tong.textContent = '📚 Thư viện: ' + NGAN_HANG.length.toLocaleString('vi-VN') + ' câu • ' + MON_HOC.length + ' môn';
 }
 function moMon(monId){
   if(state.tatMon.includes(monId)){ toast('Môn này đang được phụ huynh tạm tắt.'); return; }
   amClick();
   const mon = MON_HOC.find(m=>m.id===monId);
   document.getElementById('noiDungGame').innerHTML =
-    '<div class="khung-bai"><h2 style="margin-top:0">'+mon.icon+' '+mon.ten+'</h2><p class="mo-ta">'+mon.moTa+'</p>'
+    '<div class="khung-bai"><h2 style="margin-top:0">'+mon.icon+' '+mon.ten+'</h2>'
     + '<div class="luoi-game">' + GAME_THEO_MON[monId].map(g=>{
       const so = demTheo(monId, g.id);
       const them = so ? ' • Ngân hàng: ' + so + ' câu' : ' • Bài học tương tác';
