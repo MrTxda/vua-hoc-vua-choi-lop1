@@ -113,6 +113,9 @@
   .dap-an.dung{background:#b8f1cc !important; border-color:#1e9e52 !important; color:#0b5c2e !important; animation:nhay 0.45s}
   .dap-an.sai{background:#ffd6d6 !important; border-color:#d63031 !important; color:#8a1a1a !important; animation:lac 0.4s}
   .dap-an:disabled{cursor:default; opacity:1}
+  .o-dap-an{display:flex; gap:8px; align-items:stretch}
+  .o-dap-an .dap-an{flex:1}
+  .nut-loa{width:58px; min-width:58px; border-radius:14px; border:3px solid #e8d9a8; background:#fff; color:#222; font-size:24px; cursor:pointer}
   @keyframes nhay{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
   @keyframes lac{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
   .phan-hoi{font-size:22px; margin-top:16px; min-height:32px; font-weight:bold}
@@ -163,6 +166,8 @@
     <button class="nut nut-nho" onclick="veTrangChu(); amClick()">🏠 Trang chủ</button>
     <button class="nut nut-nho" onclick="moPhuHuynh(); amClick()">👨‍👩‍👧 Chế độ phụ huynh</button>
     <button class="nut nut-nho" id="nutAm" onclick="doiAmThanh()">🔊 Âm thanh: Bật</button>
+    <button class="nut nut-nho" id="nutGiong" onclick="doiGiongDoc()">🎙️ Giọng đọc: Bật</button>
+    <button class="nut nut-nho" onclick="thuGiongDoc(); amClick()">🔊 Thử giọng đọc</button>
   </div>
 </header>
 
@@ -250,15 +255,125 @@ function amClick(){ tone(600, 0.08); }
 function amDung(){ [523,659,784].forEach((f,i)=>tone(f,0.18,'sine',i*0.09)); }
 function amSai(){ tone(170, 0.30, 'sawtooth'); }
 function amHoanThanh(){ [523,659,784,1046,784,1046].forEach((f,i)=>tone(f,0.20,'triangle',i*0.12)); }
-/* Đọc tiếng Việt bằng giọng máy có sẵn của trình duyệt */
+/* ============================================================
+   GIỌNG ĐỌC (SpeechSynthesis) - SỬA LỚN 2026-10-27
+   Vấn đề user báo: trước đây chỉ có tiếng beep hệ thống (Web
+   Audio), còn phát âm chỉ được gọi ở vài chỗ (học chữ, ghép
+   âm, tập đọc). Nay mọi câu hỏi trắc nghiệm đều được đọc.
+   - voiceBat: công tắc giọng đọc, riêng với amBat (tiếng beep).
+   - vietHoaCauHoi: bỏ thẻ HTML + emoji, chuyển ký hiệu Toán
+     thành lời ("5 + 3 = ?" -> "5 cộng 3 bằng bao nhiêu") để
+     giọng máy không đọc ký hiệu một cách khó hiểu.
+   - layGiongViet: ưu tiên giọng có lang bắt đầu bằng "vi".
+     Trên Android, giọng này nằm trong Google Text-to-Speech;
+     nếu máy chưa cài giọng Tiếng Việt thì trình duyệt sẽ đọc
+     bằng giọng mặc định hoặc im lặng - xem chẩn đoán ở chế độ
+     phụ huynh (capNhatTrangThaiGiong).
+   ============================================================ */
+let voiceBat = true;
+function vietHoaCauHoi(text){
+  let s = String(text);
+  s = s.replace(/<[^>]*>/g, ' ');
+  s = s.replace(/&amp;/g, ' và ');
+  s = s.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, ' ');
+  s = s.replace(/\s*=\s*\?/g, ' bằng bao nhiêu');
+  s = s.replace(/\s*\?\s*/g, ' lớn hơn, bé hơn hay bằng ');
+  s = s.replace(/\s*\+\s*/g, ' cộng ');
+  s = s.replace(/\s*-\s*/g, ' trừ ');
+  s = s.replace(/>/g, ' lớn hơn ');
+  s = s.replace(/</g, ' bé hơn ');
+  s = s.replace(/=/g, ' bằng ');
+  s = s.replace(/_/g, ' chữ còn thiếu ');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+function layGiongViet(){
+  try{
+    const vs = speechSynthesis.getVoices() || [];
+    return vs.find(v => (v.lang || '').toLowerCase().indexOf('vi') === 0)
+        || vs.find(v => (v.lang || '').toLowerCase().indexOf('vi') >= 0)
+        || null;
+  }catch(e){ return null; }
+}
+try{
+  if('speechSynthesis' in window){
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged = function(){ speechSynthesis.getVoices(); };
+  }
+}catch(e){}
 function docTiengViet(text){
+  if(!voiceBat) return;
   try{
     if(!('speechSynthesis' in window)) return;
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
+    const u = new SpeechSynthesisUtterance(vietHoaCauHoi(text));
     u.lang = 'vi-VN'; u.rate = 0.9;
+    const v = layGiongViet(); if(v) u.voice = v;
     speechSynthesis.speak(u);
   }catch(e){}
+}
+function speakEn(text, huy){
+  if(!voiceBat) return;
+  try{
+    if(!('speechSynthesis' in window)) return;
+    if(huy !== false) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'en-US'; u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function docCauHoiHienTai(){
+  if(!current) return;
+  const q = current.cauHoi[current.viTri]; if(!q) return;
+  if(q.doc) docTiengViet('Bé hãy chọn chữ ' + q.doc);
+  else if(q.docEn) speakEn(q.docEn);
+  else docTiengViet(q.cau);
+}
+function docDapAn(i){
+  if(!current) return;
+  const q = current.cauHoi[current.viTri]; if(!q) return;
+  const da = q.luaChon[i];
+  if(current.mon === 'tienganh'){
+    let word = String(da);
+    if(current.game === 'nghe') word = word.replace(/^\S+\s+/, '');
+    speakEn(word);
+  } else {
+    docTiengViet(String(da));
+  }
+}
+function docPhanHoi(q, dung){
+  if(!voiceBat) return;
+  if(current && current.mon === 'tienganh'){
+    let word = String(q.dapAn);
+    if(current.game === 'nghe') word = word.replace(/^\S+\s+/, '');
+    if(dung){ docTiengViet('Đúng rồi! Bé giỏi quá!'); setTimeout(function(){ speakEn(word, false); }, 1100); }
+    else { docTiengViet('Chưa đúng rồi.'); setTimeout(function(){ speakEn(word, false); }, 1100); }
+    return;
+  }
+  if(dung) docTiengViet('Đúng rồi! Bé giỏi quá!');
+  else docTiengViet('Chưa đúng rồi. Đáp án đúng là ' + String(q.dapAn) + '.');
+}
+function doiGiongDoc(){
+  voiceBat = !voiceBat;
+  const el = document.getElementById('nutGiong');
+  if(el) el.textContent = voiceBat ? '🎙️ Giọng đọc: Bật' : '🎙️ Giọng đọc: Tắt';
+  if(voiceBat) docTiengViet('Xin chào bé!');
+  else { try{ speechSynthesis.cancel(); }catch(e){} }
+}
+function thuGiongDoc(){
+  if(!('speechSynthesis' in window)){ toast('Thiết bị này không hỗ trợ giọng đọc.'); return; }
+  voiceBat = true;
+  const el = document.getElementById('nutGiong'); if(el) el.textContent = '🎙️ Giọng đọc: Bật';
+  docTiengViet('Xin chào bé! Hôm nay bé muốn học gì?');
+  setTimeout(function(){
+    if(!layGiongViet()) toast('Không tìm thấy giọng Tiếng Việt trên máy này. Bé cần cài giọng Tiếng Việt trong cài đặt điện thoại nhé!');
+  }, 1500);
+}
+function capNhatTrangThaiGiong(){
+  const el = document.getElementById('trangThaiGiong'); if(!el) return;
+  if(!('speechSynthesis' in window)){ el.textContent = '🔊 Giọng đọc: Thiết bị này không hỗ trợ giọng đọc.'; return; }
+  if(layGiongViet()){ el.textContent = '🔊 Giọng đọc: Đã tìm thấy giọng Tiếng Việt trên máy này.'; return; }
+  el.textContent = '🔊 Giọng đọc: Chưa tìm thấy giọng Tiếng Việt. Trên Android: Cài đặt > Hệ thống > Ngôn ngữ > Text-to-Speech > chọn Google Text-to-Speech, tải giọng Tiếng Việt. Trên iPhone: Cài đặt > Trợ năng > Nội dung được đọc > Giọng nói > Tiếng Việt.';
 }
 function doiAmThanh(){
   amBat = !amBat;
@@ -1397,12 +1512,12 @@ function renderCauHoi(){
     + (q.nhom ? '<p style="margin:0"><span class="chip">🏷️ '+q.nhom+'</span></p>' : '')
     + (q.emoji ? '<div class="emoji-lon">'+q.emoji+'</div>' : '')
     + '<div class="cau-hoi">'+q.cau+'</div>'
+    + '<div class="ke-trang" style="margin-top:6px"><button class="nut nut-vang nut-nho" onclick="docCauHoiHienTai()">🔊 Nghe câu hỏi</button><span style="font-size:17px; color:#555">Bé bấm loa 🔊 bên cạnh đáp án để nghe từng đáp án.</span></div>'
     + '<div class="luoi-dap-an">' + q.luaChon.map((da,i)=>
-        '<button class="dap-an" onclick="chonDapAn(this,'+i+')">'+da+'</button>').join('') + '</div>'
+        '<div class="o-dap-an"><button class="dap-an" onclick="chonDapAn(this,'+i+')">'+da+'</button><button class="nut-loa" type="button" onclick="event.stopPropagation(); docDapAn('+i+')">🔊</button></div>').join('') + '</div>'
     + '<div class="phan-hoi" id="phanHoi"></div>'
     + '<div class="ke-trang"><button class="nut nut-xanh" id="nutTiep" style="display:none" onclick="cauTiepTheo()">Câu tiếp theo ➡️</button></div></div>';
-  if(q.doc) docTiengViet('Bé hãy chọn chữ ' + q.doc);
-  if(q.docEn){ try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(q.docEn); u.lang='en-US'; u.rate=0.9; speechSynthesis.speak(u); }catch(e){} }
+  docCauHoiHienTai();
   hienManHinh('manHinhGame');
 }
 function chonDapAn(nut, chiSo){
@@ -1422,6 +1537,7 @@ function chonDapAn(nut, chiSo){
     document.querySelectorAll('.dap-an').forEach(b=>{ if(b.textContent==String(q.dapAn)) b.classList.add('dung'); });
     document.getElementById('phanHoi').textContent = '💪 Chưa đúng rồi, đáp án đúng là: ' + q.dapAn + (q.giai ? ' - ' + q.giai : '') + '. Bé thử lại câu sau nhé!';
   }
+  docPhanHoi(q, dung);
   luu(); kiemTraHuyHieu(); capNhatTieuDe();
   document.getElementById('nutTiep').style.display='inline-block';
 }
@@ -1533,7 +1649,9 @@ function moPhuHuynh(){
   document.getElementById('baoCaoPhuHuynh').innerHTML =
     '<p>⭐ Tổng sao: <b>'+state.stars+'</b> &nbsp;|&nbsp; 🏆 Điểm: <b>'+state.points+'</b> &nbsp;|&nbsp; 🎁 Hình dán: <b>'+state.stickers.length+'</b> &nbsp;|&nbsp; 🏅 Huy hiệu: <b>'+state.badges.length+'</b></p>'
     + '<p>📚 Thư viện hiện có: <b>'+NGAN_HANG.length+' câu</b> (Tiếng Việt '+NGAN_HANG.filter(q=>q.mon==='viet').length+', Toán '+NGAN_HANG.filter(q=>q.mon==='toan').length+', Cuộc sống '+NGAN_HANG.filter(q=>q.mon==='life').length+'). Số này do chính code đếm, không phải con số ghi tay.</p>'
+    + '<p id="trangThaiGiong">🔊 Giọng đọc: đang kiểm tra...</p>'
     + '<table class="bang"><tr><th>Môn học</th><th>Kết quả</th><th>Tỉ lệ đúng</th></tr>'+baoCao+'</table>';
+  setTimeout(capNhatTrangThaiGiong, 800);
   document.getElementById('chonMonPhuHuynh').innerHTML = MON_HOC.map(m=>{
     const tat = state.tatMon.includes(m.id);
     return '<label style="display:block; margin:8px 0; font-size:20px"><input type="checkbox" style="width:22px; height:22px" '+(tat?'':'checked')
