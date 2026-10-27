@@ -22,8 +22,10 @@ https://mrtxda.github.io/vua-hoc-vua-choi-lop1/
 - Server: `server.py`, cổng **20200**, bind 127.0.0.1, phục vụ thư mục gốc
   của dự án này (`index.html` + `dist/`).
 - Tunnel: `localhost.run` qua key `~/.ssh/lr_tunnel`, URL ghi vào
-  `server-url.txt`. URL dạng `*.lhr.life` này **đổi mỗi lần tunnel restart**,
-  không ổn định như tunnel dịch.
+  `server-url.txt`. Với key đã đăng ký này, URL đã giữ nguyên qua lần
+  restart ngày 2026-10-27 (vẫn là `https://34fb7a82c4864e.lhr.life/`),
+  nhưng vẫn coi là tạm: nếu tunnel khởi động lại mà URL đổi thì lấy
+  URL mới trong `server-url.txt`, không dùng URL cũ.
 - **KHÔNG đụng tới dịch vụ dịch AutoCAD**: dịch vụ đó chạy cổng 20128,
   tunnel tunnl.gg key `tunnl_dich`, URL cố định
   https://ruby-river-f322d336.tunnl.gg — server tạm này dùng cổng và key
