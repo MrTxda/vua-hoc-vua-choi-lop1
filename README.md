@@ -9,6 +9,22 @@ Mở file `dist/vua-hoc-vua-choi-lop1-day-du.html` bằng cách nhấp đúp
 hoặc kéo thả vào trình duyệt Chrome / Edge / Firefox / Safari.
 Không cần server, không cần mạng (trừ giọng đọc có sẵn của trình duyệt).
 
+## Dùng cho nhiều máy
+
+- **Link lâu dài, dùng cho nhiều máy:** GitHub Pages
+  https://mrtxda.github.io/vua-hoc-vua-choi-lop1/
+  (repo PUBLIC, không cần đăng nhập, máy nào mở cũng được).
+  Hạn chế: bản Pages không có server `/tts`, nên trên máy tính
+  không có giọng Tiếng Việt thì giọng đọc sẽ về giọng máy.
+- **Link server tạm, có giọng Việt cho máy tính:**
+  https://34fb7a82c4864e.lhr.life/ (xem `SERVER-TAM.md`).
+  Link này mở được từ nhiều máy, không cần đăng nhập, nhưng chỉ
+  là tạm: server chết khi máy chủ khởi động lại, URL đổi mỗi lần
+  tunnel khởi động lại, và máy chủ này không phải server sản xuất
+  (giọng `/tts` tổng hợp nối tiếp nhau, nhiều máy bấm cùng lúc sẽ
+  phải xếp hàng vài giây). Server chỉ phục vụ file app, không liệt
+  kê thư mục và chặn `.git`, `tts-cache`, `server-url.txt`.
+
 ## Cấu trúc nguồn (đã tách riêng, theo lựa chọn ngày 2026-10-27)
 
 ```

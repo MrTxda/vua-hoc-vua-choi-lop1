@@ -29,17 +29,49 @@ https://mrtxda.github.io/vua-hoc-vua-choi-lop1/
   https://ruby-river-f322d336.tunnl.gg — server tạm này dùng cổng và key
   hoàn toàn khác, dịch vụ dịch vẫn đang chạy bình thường.
 
+## Giọng Việt từ server (cho trình duyệt máy tính)
+
+Trình duyệt trên máy tính thường không có giọng Tiếng Việt, nên app
+không dùng giọng máy cho tiếng Việt khi mở qua server này. Thay vào đó,
+app lấy âm thanh từ `/tts` của server: giọng Piper vi_VN-vais1000-medium
+đã có sẵn trên máy, nạp 1 lần, tổng hợp ~0.15s/câu, cache theo hash câu
+vào `tts-cache/` (câu lặp lại trả ngay trong 0.04s). Tiếng Anh vẫn dùng
+giọng en-US của trình duyệt (máy tính thường có sẵn).
+
+Quy tắc trong app (`src/template.html`, hàm `docTiengViet`):
+- Có server `/tts` thì dùng âm thanh server, hết câu Việt mới đọc từ Anh
+  (bài Nghe và phản hồi Tiếng Anh nối theo Promise, không hẹn giờ cố định).
+- Không có server (mở bằng `file://`, Pages, hoặc server tạm tắt) thì
+  tự về giọng máy SpeechSynthesis, không hỏng. Chế độ phụ huynh báo rõ
+  "Đang dùng giọng Việt từ server" khi server đang bật.
+
 ## Khởi động lại (khi VM restart hoặc server/tunnel chết)
 
 Server và tunnel này **không tự khởi động lại** sau VM restart.
-Chạy lại 2 lệnh (hoặc nhắn Muse "khởi động lại server tạm app lớp 1"):
+Chạy lại 2 lệnh (hoặc nhắn Muse "khởi động lại server tạm app lớp 1").
+Lưu ý dùng Python của Piper (không phải python3 hệ thống) để có `/tts`:
 
 ```bash
-python3 ~/workspace/vua-hoc-vua-choi/server.py --port 20200
+~/workspace/stremio-ai-dubbing/piper-spike/.venv/bin/python ~/workspace/vua-hoc-vua-choi/server.py --port 20200
 bash ~/workspace/stremio-ai-dubbing/bin/lr-tunnel.sh 20200 ~/workspace/vua-hoc-vua-choi/server-url.txt
 ```
 
 Sau đó đọc URL mới trong `server-url.txt` (URL cũ sẽ hết hiệu lực).
+
+## Chia sẻ cho nhiều máy (2026-10-27)
+
+Link https://34fb7a82c4864e.lhr.life/ mở được từ nhiều máy, không
+cần đăng nhập, vì tunnel localhost.run đưa cổng 20200 ra Internet.
+Trước khi chia sẻ rộng đã kiểm tra và chặn: `.git` (từng trả 200),
+liệt kê thư mục, `tts-cache/`, `server-url.txt` — tất cả giờ trả 404,
+chỉ còn file app, `/health`, `/tts` là mở được.
+
+Giới hạn khi dùng đông: `/tts` tổng hợp nối tiếp (khóa khi tổng hợp),
+mỗi câu ~0.15s, nên 30 máy bấm cùng lúc sẽ xếp hàng vài giây; máy chủ
+này không phải server sản xuất, không có xác thực (ai có link cũng
+dùng được `/tts`). Dùng lâu dài cho nhiều máy thì dùng GitHub Pages
+https://mrtxda.github.io/vua-hoc-vua-choi-lop1/ (ổn định, không phụ
+thuộc máy này), còn link server tạm chỉ để có giọng Việt trên máy tính.
 
 ## Dừng server tạm
 

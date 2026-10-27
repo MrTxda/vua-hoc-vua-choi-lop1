@@ -101,8 +101,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=HERE, **kwargs)
 
+    def list_directory(self, path):
+        # Khong liet ke thu muc khi chia se rong: app chi can file cu the.
+        self.send_error(404, "khong liet ke thu muc")
+        return None
+
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
+        # Chan file an / noi bo truoc khi chia se rong: .git, cache am thanh,
+        # file URL tam. App khong can nhung duong nay de chay.
+        blocked_prefixes = ("/.git", "/tts-cache", "/server-url.txt")
+        if parsed.path in blocked_prefixes or any(parsed.path.startswith(p + "/") for p in blocked_prefixes):
+            self.send_error(404, "khong tim thay")
+            return
+        if any(part.startswith(".") for part in parsed.path.split("/") if part):
+            self.send_error(404, "khong tim thay")
+            return
         if parsed.path == "/health":
             body = json.dumps(
                 {"ok": True, "dist_mtime": os.path.getmtime(DIST) if os.path.exists(DIST) else 0,
@@ -154,8 +168,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=20200)
     args = ap.parse_args()
+    socketserver.ThreadingTCPServer.allow_reuse_address = True  # dat TRUOC khi bind, neu khong socket TIME_WAIT se chan khoi dong lai
     with socketserver.ThreadingTCPServer(("127.0.0.1", args.port), Handler) as httpd:
-        httpd.allow_reuse_address = True
         httpd.daemon_threads = True
         print(f"[server] dang phuc vu {HERE} o http://127.0.0.1:{args.port}/", flush=True)
         print(f"[server] /health: http://127.0.0.1:{args.port}/health", flush=True)
