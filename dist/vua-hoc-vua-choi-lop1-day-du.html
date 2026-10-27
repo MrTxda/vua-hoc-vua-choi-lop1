@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vừa Học Vừa Chơi - Lớp 1</title>
+<!--
+  ============================================================
+  ỨNG DỤNG: VỪA HỌC VỪA CHƠI - DÀNH CHO HỌC SINH LỚP 1
+  ------------------------------------------------------------
+  * MỘT FILE HTML DUY NHẤT: toàn bộ CSS + JavaScript đều nằm
+    trong file này. Không cần server, không cần cài đặt,
+    không dùng thư viện ngoài phức tạp.
+  * Cách mở: nhấp đúp vào file này, hoặc kéo-thả file vào
+    trình duyệt Chrome / Edge / Firefox / Safari.
+  * Nội dung: bám theo Chương trình GDPT 2018 lớp 1 và khung
+    kiến thức chung của 3 bộ sách Kết nối tri thức với cuộc
+    sống, Chân trời sáng tạo, Cánh diều. Các bài tập trong
+    file là bài tập tự biên soạn theo chuẩn kiến thức đó,
+    KHÔNG sao chép nguyên văn trang sách giáo khoa.
+  * Âm thanh: dùng Web Audio API (tự tạo nốt nhạc, không cần
+    file mp3) + SpeechSynthesis để đọc tiếng Việt.
+  * Tiến độ: lưu tự động vào localStorage của trình duyệt
+    (máy nào chơi thì lưu ở máy đó, xóa dữ liệu trình duyệt
+    sẽ mất tiến độ).
+  ============================================================
+-->
+<style>
+  /* ---------- 1. GIAO DIỆN CHUNG: to, rõ, tươi sáng ---------- */
+  :root{
+    --hong:#ff5d8f; --vang:#ffc93c; --xanh:#2ec4b6; --xanh-duong:#4a90e2;
+    --cam:#ff8c42; --tim:#9b5de5; --nen:#fff7e6; --chu:#333;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:"Segoe UI", Arial, Helvetica, sans-serif;
+    font-size:20px; color:var(--chu);
+    background:linear-gradient(180deg,#ffe8f0 0%,#fff7e6 40%,#e0f7f5 100%);
+    min-height:100vh;
+  }
+  header{
+    background:linear-gradient(90deg,var(--hong),var(--cam),var(--vang));
+    color:#fff; padding:16px; text-align:center;
+    box-shadow:0 4px 12px rgba(0,0,0,.15);
+  }
+  header h1{margin:0; font-size:34px; letter-spacing:1px; line-height:1.2}
+  header p{margin:6px 0 0; font-size:18px; opacity:.95}
+  .thanh-diem{
+    display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:12px;
+    max-width:980px; margin-left:auto; margin-right:auto;
+  }
+  .chip{
+    background:#fff; color:#222; border-radius:999px; padding:8px 16px;
+    font-weight:bold; font-size:19px; box-shadow:0 2px 6px rgba(0,0,0,.15);
+  }
+  /* SỬA LỖI ẢNH CHỤP MÀN HÌNH: trước đây .nut không đặt màu chữ nên
+     nút trong header (color:#fff) bị chữ trắng trên nền trắng, không
+     nhìn thấy chữ "Trang chủ", "Phụ huynh", "Âm thanh". Nay đặt màu
+     chữ tối bắt buộc cho mọi nút, nút màu mới dùng chữ trắng. */
+  .nut{
+    border:0; border-radius:18px; padding:14px 22px; font-size:21px; font-weight:bold;
+    cursor:pointer; background:#fff; color:#222 !important;
+    box-shadow:0 4px 0 rgba(0,0,0,.15);
+    transition:transform .1s, box-shadow .1s;
+  }
+  .nut:hover{filter:brightness(1.03)}
+  .nut:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.15)}
+  .nut:focus-visible, .dap-an:focus-visible, .the-mon:focus-visible{outline:4px solid #222; outline-offset:3px}
+  .nut-hong{background:var(--hong); color:#fff !important}
+  .nut-xanh{background:var(--xanh); color:#fff !important}
+  .nut-vang{background:var(--vang); color:#222 !important}
+  .nut-nho{padding:10px 16px; font-size:18px; border-radius:999px; white-space:nowrap}
+  main{max-width:980px; margin:0 auto; padding:20px 16px 60px}
+  h2{font-size:30px; text-align:center; margin:18px 0 6px}
+  .mo-ta{text-align:center; font-size:19px; color:#555; margin-bottom:20px}
+  /* ---------- 2. DASHBOARD: 3 thẻ môn học lớn ---------- */
+  .luoi-mon{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px}
+  .the-mon{
+    border-radius:26px; padding:22px; text-align:center; color:#fff; cursor:pointer;
+    box-shadow:0 8px 0 rgba(0,0,0,.12); transition:transform .15s;
+  }
+  .the-mon:hover{transform:scale(1.03)}
+  .the-mon .icon{font-size:72px; display:block; margin-bottom:8px}
+  .the-mon h3{font-size:28px; margin:8px 0}
+  .the-mon p{font-size:18px; margin:0; opacity:.95}
+  .mon-viet{background:linear-gradient(135deg,#ff5d8f,#ff8c42)}
+  .mon-toan{background:linear-gradient(135deg,#4a90e2,#2ec4b6)}
+  .mon-song{background:linear-gradient(135deg,#9b5de5,#00bbf9)}
+  .the-mon.tat{background:#bbb !important; filter:grayscale(1); cursor:not-allowed}
+  /* ---------- 3. Danh sách trò chơi trong 1 môn ---------- */
+  .luoi-game{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; margin-top:16px}
+  .the-game{
+    background:#fff; border-radius:20px; padding:18px; text-align:left;
+    box-shadow:0 4px 12px rgba(0,0,0,.1); cursor:pointer; border:3px solid transparent;
+  }
+  .the-game:hover{border-color:var(--vang); transform:translateY(-2px)}
+  .the-game b{font-size:22px; display:block}
+  .the-game span{font-size:18px; color:#555}
+  /* ---------- 4. Khu vực làm bài ---------- */
+  .khung-bai{
+    background:#fff; border-radius:26px; padding:24px; margin-top:18px;
+    box-shadow:0 6px 18px rgba(0,0,0,.1); text-align:center;
+  }
+  .cau-hoi{font-size:32px; font-weight:bold; margin:16px 0; line-height:1.4; color:#222}
+  .emoji-lon{font-size:88px; line-height:1.1}
+  .luoi-dap-an{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:18px}
+  .dap-an{
+    padding:20px 16px; min-height:76px; font-size:28px; font-weight:bold; border-radius:18px;
+    border:3px solid #e8d9a8; background:#fffbe6; color:#222 !important; cursor:pointer;
+    box-shadow:0 3px 0 rgba(0,0,0,.10);
+  }
+  .dap-an:hover:not(:disabled){background:#fff0a8; transform:translateY(-1px)}
+  .dap-an.dung{background:#b8f1cc !important; border-color:#1e9e52 !important; color:#0b5c2e !important; animation:nhay 0.45s}
+  .dap-an.sai{background:#ffd6d6 !important; border-color:#d63031 !important; color:#8a1a1a !important; animation:lac 0.4s}
+  .dap-an:disabled{cursor:default; opacity:1}
+  @keyframes nhay{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+  @keyframes lac{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .phan-hoi{font-size:22px; margin-top:16px; min-height:32px; font-weight:bold}
+  .thanh-tien-do{height:22px; background:#eee; border-radius:999px; overflow:hidden; margin:12px 0}
+  .thanh-tien-do i{display:block; height:100%; background:linear-gradient(90deg,var(--xanh),var(--vang)); transition:width .4s}
+  .chu-cai{
+    display:inline-block; width:64px; height:64px; line-height:64px; margin:6px;
+    font-size:34px; font-weight:bold; border-radius:16px; background:#fffbe6; color:#222;
+    border:3px solid var(--vang); cursor:pointer;
+  }
+  .chu-cai:hover{background:var(--vang)}
+  .chu-lon{font-size:110px; font-weight:bold; color:var(--hong); margin:10px 0}
+  .ke-trang{margin-top:18px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap}
+  .bang{width:100%; border-collapse:collapse; font-size:18px; margin-top:12px; text-align:left}
+  .bang th,.bang td{border:1px solid #ddd; padding:10px}
+  .bang th{background:#fff3cd}
+  #toast{
+    position:fixed; left:50%; bottom:28px; transform:translateX(-50%);
+    background:#333; color:#fff; padding:14px 22px; border-radius:999px;
+    font-size:20px; font-weight:bold; display:none; z-index:99; box-shadow:0 6px 20px rgba(0,0,0,.3);
+  }
+  .huy-hieu{display:inline-block; background:#fff; border-radius:16px; padding:10px 14px; margin:6px; box-shadow:0 3px 8px rgba(0,0,0,.1)}
+  @media (max-width:600px){
+    header h1{font-size:26px} body{font-size:18px}
+    .luoi-dap-an{grid-template-columns:1fr} .cau-hoi{font-size:26px}
+    .thanh-diem{gap:8px} .chip{font-size:17px} .nut-nho{font-size:16px}
+    .khung-bai{padding:18px 14px} .emoji-lon{font-size:64px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌈 VỪA HỌC VỪA CHƠI - LỚP 1 🎈</h1>
+  <p>Bé học giỏi, bé chơi vui - Tiếng Việt • Toán • Tự nhiên &amp; Xã hội</p>
+  <div class="thanh-diem">
+    <span class="chip" id="chipSao">⭐ 0 sao</span>
+    <span class="chip" id="chipDiem">🏆 0 điểm</span>
+    <span class="chip" id="chipSticker">🎁 0 hình dán</span>
+    <button class="nut nut-nho" onclick="veTrangChu(); amClick()">🏠 Trang chủ</button>
+    <button class="nut nut-nho" onclick="moPhuHuynh(); amClick()">👨‍👩‍👧 Chế độ phụ huynh</button>
+    <button class="nut nut-nho" id="nutAm" onclick="doiAmThanh()">🔊 Âm thanh: Bật</button>
+  </div>
+</header>
+
+<main>
+  <!-- ===== DASHBOARD ===== -->
+  <section id="manHinhChinh">
+    <h2>👋 Xin chào bé! Hôm nay bé muốn học gì?</h2>
+    <p class="mo-ta">Chạm vào một môn học để bắt đầu. Trả lời đúng được sao vàng, hoàn thành bài được huy hiệu và hình dán!</p>
+    <p style="text-align:center; margin:0 0 16px"><span class="chip" id="chipThuVien">📚 Thư viện: đang tải...</span> <span class="chip" id="chipThuVienChiTiet"></span><br><span style="font-size:17px; color:#555">Mỗi lượt chơi lấy ngẫu nhiên 8-10 câu nên bé chơi lại vẫn gặp câu mới.</span></p>
+    <div class="luoi-mon" id="luoiMon"></div>
+
+    <div class="khung-bai">
+      <h3 style="margin:0">🎯 Mục tiêu hôm nay: 30 sao vàng</h3>
+      <div class="thanh-tien-do"><i id="tienDoNgay" style="width:0%"></i></div>
+      <p id="chuTienDo" style="margin:0">Bé đã có 0 / 30 sao. Cố lên!</p>
+      <h3>🏅 Huy hiệu của bé</h3>
+      <div id="khuHuyHieu"><p style="color:#888">Chưa có huy hiệu. Làm đúng câu đầu tiên để nhận huy hiệu đầu tiên nhé!</p></div>
+      <h3>🎁 Bộ sưu tập hình dán</h3>
+      <div id="khuSticker"><p style="color:#888">Hoàn thành một bài chơi để mở hình dán đầu tiên!</p></div>
+    </div>
+  </section>
+
+  <!-- ===== MÀN HÌNH MÔN HỌC / TRÒ CHƠI ===== -->
+  <section id="manHinhGame" style="display:none">
+    <div id="noiDungGame"></div>
+    <div class="ke-trang">
+      <button class="nut" onclick="veTrangChu(); amClick()">🏠 Về trang chủ</button>
+    </div>
+  </section>
+
+  <!-- ===== CHẾ ĐỘ PHỤ HUYNH ===== -->
+  <section id="manHinhPhuHuynh" style="display:none">
+    <div class="khung-bai" style="text-align:left">
+      <h2 style="text-align:left; margin-top:0">👨‍👩‍👧 Chế độ phụ huynh</h2>
+      <p>Phụ huynh xem tiến độ của con, chọn môn học cho phép bé chơi, và đặt lại tiến độ khi cần. Đây là bản theo dõi trên chính thiết bị bé đang chơi (dữ liệu lưu ở trình duyệt, không gửi đi đâu).</p>
+      <div id="baoCaoPhuHuynh"></div>
+      <h3>✅ Chọn môn học cho bé</h3>
+      <div id="chonMonPhuHuynh"></div>
+      <h3>🕘 Lịch sử làm bài gần nhất</h3>
+      <div id="lichSuPhuHuynh"></div>
+      <div class="ke-trang" style="justify-content:flex-start">
+        <button class="nut nut-hong" onclick="datLaiTienDo()">🗑️ Đặt lại toàn bộ tiến độ</button>
+        <button class="nut nut-xanh" onclick="veTrangChu(); amClick()">🏠 Về trang chủ</button>
+      </div>
+      <p style="color:#666; font-size:17px">Gợi ý cho phụ huynh: mỗi ngày cho bé chơi 15-20 phút, ưu tiên đọc to thành tiếng ở phần Tập đọc, và hỏi lại bé “vì sao con chọn đáp án này?” ở phần Toán đố và Kỹ năng sống.</p>
+    </div>
+  </section>
+</main>
+<div id="toast"></div>
+<script>
+/* ============================================================
+   PHẦN A. ÂM THANH BẰNG WEB AUDIO API (không cần file mp3)
+   - Mỗi lần bấm nút: 1 nốt ngắn. Đúng: 3 nốt đi lên.
+   - Sai: 1 nốt trầm. Hoàn thành: 1 giai điệu ngắn.
+   - AudioContext chỉ được tạo sau lần chạm đầu tiên của người
+     dùng (quy định của trình duyệt) nên hàm tone() có try/catch.
+   ============================================================ */
+let AC = null, amBat = true;
+function tone(tanSo, thoiLuong, kieu, tre){
+  if(!amBat) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = kieu || 'sine'; o.frequency.value = tanSo;
+    const t0 = AC.currentTime + (tre || 0);
+    g.gain.setValueAtTime(0.16, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + thoiLuong);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0); o.stop(t0 + thoiLuong);
+  }catch(e){}
+}
+function amClick(){ tone(600, 0.08); }
+function amDung(){ [523,659,784].forEach((f,i)=>tone(f,0.18,'sine',i*0.09)); }
+function amSai(){ tone(170, 0.30, 'sawtooth'); }
+function amHoanThanh(){ [523,659,784,1046,784,1046].forEach((f,i)=>tone(f,0.20,'triangle',i*0.12)); }
+/* Đọc tiếng Việt bằng giọng máy có sẵn của trình duyệt */
+function docTiengViet(text){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'vi-VN'; u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function doiAmThanh(){
+  amBat = !amBat;
+  document.getElementById('nutAm').textContent = amBat ? '🔊 Âm thanh: Bật' : '🔇 Âm thanh: Tắt';
+  if(amBat) amClick();
+}
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(()=> el.style.display = 'none', 2600);
+}
+function tron(arr){ // xáo trộn mảng, dùng cho đáp án trắc nghiệm
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function soNgauNhien(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+</script>
+<script>
+/* ============================================================
+   PHẦN B. TRẠNG THÁI + GAMIFICATION (lưu localStorage)
+   - stars: sao vàng; points: điểm (đúng = 10 điểm)
+   - per: số câu đúng / tổng theo từng môn, để phụ huynh xem
+   - stickers: hình dán đã mở; badges: huy hiệu đã nhận
+   - history: mỗi lần hoàn thành 1 bài -> 1 dòng lịch sử
+   ============================================================ */
+const KHOA_LUU = 'lop1_vua_hoc_vua_choi_v1';
+let state = null;
+try{ state = JSON.parse(localStorage.getItem(KHOA_LUU) || 'null'); }catch(e){ state = null; }
+if(!state || typeof state !== 'object'){
+  state = { stars:0, points:0, correct:0, total:0, stickers:[], badges:[],
+    history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, amnhac:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[] };
+}
+function luu(){ try{ localStorage.setItem(KHOA_LUU, JSON.stringify(state)); }catch(e){} }
+const DS_STICKER = ['🦄','🦁','🐳','🦋','🌈','🚀','🍓','🐼','🦊','🐯','🌸','⭐'];
+const DS_HUY_HIEU = [
+  {id:'first', icon:'⭐', ten:'Ngôi sao đầu tiên', dk:()=>state.stars>=1},
+  {id:'viet10', icon:'📚', ten:'Siêu sao Tiếng Việt', dk:()=>state.per.viet.c>=10},
+  {id:'toan10', icon:'🔢', ten:'Siêu sao Toán học', dk:()=>state.per.toan.c>=10},
+  {id:'life10', icon:'🌍', ten:'Bé ngoan hiểu biết', dk:()=>state.per.life.c>=10},
+  {id:'cham', icon:'💯', ten:'Chăm chỉ 50 sao', dk:()=>state.stars>=50},
+  {id:'sticker5', icon:'🎁', ten:'Nhà sưu tập hình dán', dk:()=>state.stickers.length>=5},
+];
+function kiemTraHuyHieu(){
+  DS_HUY_HIEU.forEach(h=>{
+    if(!state.badges.includes(h.id) && h.dk()){
+      state.badges.push(h.id); luu();
+      toast('🏅 Chúc mừng! Bé nhận huy hiệu: ' + h.ten);
+    }
+  });
+}
+function capNhatTieuDe(){
+  document.getElementById('chipSao').textContent = '⭐ ' + state.stars + ' sao';
+  document.getElementById('chipDiem').textContent = '🏆 ' + state.points + ' điểm';
+  document.getElementById('chipSticker').textContent = '🎁 ' + state.stickers.length + ' hình dán';
+  const pct = Math.min(100, Math.round(state.stars/30*100));
+  document.getElementById('tienDoNgay').style.width = pct + '%';
+  document.getElementById('chuTienDo').textContent = 'Bé đã có ' + state.stars + ' / 30 sao. ' + (state.stars>=30 ? '🎉 Đạt mục tiêu hôm nay rồi!' : 'Cố lên!');
+  const khuH = document.getElementById('khuHuyHieu');
+  khuH.innerHTML = state.badges.length ? DS_HUY_HIEU.filter(h=>state.badges.includes(h.id))
+    .map(h=>'<span class="huy-hieu">'+h.icon+' '+h.ten+'</span>').join('')
+    : '<p style="color:#888">Chưa có huy hiệu. Làm đúng câu đầu tiên để nhận huy hiệu đầu tiên nhé!</p>';
+  const khuS = document.getElementById('khuSticker');
+  khuS.innerHTML = state.stickers.length ? state.stickers.map(s=>'<span style="font-size:44px">'+s+'</span>').join(' ')
+    : '<p style="color:#888">Hoàn thành một bài chơi để mở hình dán đầu tiên!</p>';
+}
+
+/* ============================================================
+   PHẦN C. KHO NỘI DUNG - MÔN TIẾNG VIỆT
+   Khung kiến thức lớp 1: nhận biết chữ cái, học vần, ghép âm,
+   từ ngữ quen thuộc, tập đọc câu ngắn, chính tả điền chữ.
+   ============================================================ */
+const CHU_CAI = ['a','ă','â','b','c','d','đ','e','ê','g','h','i','k','l','m','n','o','ô','ơ','p','q','r','s','t','u','ư','v','x','y'];
+const VI_DU_CHU = {a:'a - quả na', ă:'ă - mặt trăng', â:'â - cái cân', b:'b - quả bóng', c:'c - con cua', d:'d - quả dưa', đ:'đ - đèn lồng', e:'e - bé ngoan', ê:'ê - cái ghế', g:'g - con gà', h:'h - hoa hồng', i:'i - chim chích', k:'k - cái kéo', l:'l - quả lê', m:'m - mẹ hiền', n:'n - quả na', o:'o - quả nho', ô:'ô - ô tô', ơ:'ơ - quả mơ', p:'p - bút chì', q:'q - quả quýt', r:'r - rổ rau', s:'s - quả sấu', t:'t - quả táo', u:'u - quả đu đủ', ư:'ư - quả dưa', v:'v - quả vải', x:'x - xe đạp', y:'y - quả yến'};
+/* Ghép vần: phụ âm + nguyên âm = tiếng có nghĩa, kèm nghĩa gợi ý */
+const GHEP_VAN = [
+  {on:'b', am:'a', tu:'ba', nghia:'ba là bố của bé'},
+  {on:'m', am:'e', tu:'me', nghia:'me là mẹ của bé'},
+  {on:'c', am:'a', tu:'ca', nghia:'ca là con cá bơi'},
+  {on:'g', am:'a', tu:'ga', nghia:'ga là con gà'},
+  {on:'t', am:'o', tu:'to', nghia:'to là rất lớn'},
+  {on:'n', am:'a', tu:'na', nghia:'na là quả na'},
+  {on:'l', am:'e', tu:'le', nghia:'le là quả lê'},
+  {on:'d', am:'ê', tu:'dê', nghia:'dê là con dê'},
+  {on:'b', am:'ô', tu:'bô', nghia:'bô là cái bô'},
+  {on:'m', am:'ơ', tu:'mơ', nghia:'mơ là quả mơ'},
+  {on:'c', am:'ô', tu:'cô', nghia:'cô là cô giáo'},
+  {on:'t', am:'ư', tu:'tư', nghia:'tư là số bốn'},
+];
+const TU_HINH_ANH = [
+  {emoji:'🐱', tu:'mèo'}, {emoji:'🐶', tu:'chó'}, {emoji:'🐟', tu:'cá'}, {emoji:'🐔', tu:'gà'},
+  {emoji:'🍎', tu:'táo'}, {emoji:'🍌', tu:'chuối'}, {emoji:'🌸', tu:'hoa'}, {emoji:'🚗', tu:'ô tô'},
+  {emoji:'📚', tu:'sách'}, {emoji:'✏️', tu:'bút'},
+];
+const CHINH_TA = [
+  {cau:'_èo kêu meo meo.', dapAn:'m', luaChon:['m','n','b','c'], giai:'Con mèo kêu meo meo.'},
+  {cau:'Con _à bơi dưới nước.', dapAn:'c', luaChon:['c','t','k','s'], giai:'Con cá bơi dưới nước.'},
+  {cau:'Bé ăn quả _áo đỏ.', dapAn:'t', luaChon:['t','d','l','n'], giai:'Bé ăn quả táo đỏ.'},
+  {cau:'Mẹ mua quả _ê ngon.', dapAn:'l', luaChon:['l','r','h','g'], giai:'Mẹ mua quả lê ngon.'},
+  {cau:'Bé đi _ọc rất vui.', dapAn:'h', luaChon:['h','k','p','v'], giai:'Bé đi học rất vui.'},
+  {cau:'Con _à gáy ò ó o.', dapAn:'g', luaChon:['g','d','b','đ'], giai:'Con gà gáy ò ó o.'},
+];
+const TAP_DOC = [
+  'Bé Lan đi học.',
+  'Mẹ cho bé quả táo.',
+  'Con mèo kêu meo meo.',
+  'Bé chăm ngoan, học giỏi.',
+  'Hoa hồng nở rất đẹp.',
+  'Cả nhà cùng ăn cơm.',
+];
+/* ============================================================
+   PHẦN D. KHO NỘI DUNG - MÔN TOÁN
+   Phạm vi lớp 1: đếm 1-10 rồi đến 100, cộng trừ trong 10,
+   cộng trừ tròn chục trong 100, so sánh >, <, =, toán đố.
+   ============================================================ */
+const TOAN_DO = [
+  {de:'Lan có 5 quả táo. Mẹ cho thêm 3 quả. Hỏi Lan có mấy quả táo?', dapAn:8, luaChon:[7,8,9,6]},
+  {de:'Trên cành có 9 con chim, bay đi 4 con. Hỏi còn mấy con chim?', dapAn:5, luaChon:[4,5,6,13]},
+  {de:'Bé có 6 viên bi xanh và 4 viên bi đỏ. Hỏi bé có tất cả mấy viên bi?', dapAn:10, luaChon:[9,10,11,2]},
+  {de:'An có 10 cái kẹo, An ăn 2 cái. Hỏi An còn mấy cái kẹo?', dapAn:8, luaChon:[7,8,12,9]},
+  {de:'Lớp 1A có 7 bạn nam và 3 bạn nữ. Hỏi lớp có mấy bạn?', dapAn:10, luaChon:[10,9,4,11]},
+  {de:'Mẹ mua 8 quả cam, cả nhà ăn hết 3 quả. Hỏi còn mấy quả cam?', dapAn:5, luaChon:[5,11,4,6]},
+];
+/* ============================================================
+   PHẦN E. KHO NỘI DUNG - TNXH & ĐẠO ĐỨC
+   Chủ đề: gia đình, thiên nhiên, giao thông, kỹ năng sống.
+   Mỗi câu đều có lời giải thích ngắn để bé hiểu, không chỉ nhớ.
+   ============================================================ */
+const CAU_HOI_SONG = [
+  {nhom:'Gia đình', emoji:'👨‍👩‍👧', cau:'Ai là người sinh ra và nuôi bé lớn?', luaChon:['Bố mẹ','Bạn hàng xóm','Cô bán hàng'], dapAn:0, giai:'Bố mẹ là người yêu thương và chăm sóc bé.'},
+  {nhom:'Gia đình', emoji:'🏠', cau:'Bé nên làm gì để giúp bố mẹ?', luaChon:['Dọn đồ chơi gọn gàng','Vứt đồ lung tung','Không nghe lời'], dapAn:0, giai:'Dọn đồ gọn gàng là bé ngoan, giúp bố mẹ vui.'},
+  {nhom:'Thiên nhiên', emoji:'🌧️', cau:'Trời mưa, bé cần mang theo gì khi ra ngoài?', luaChon:['Ô hoặc áo mưa','Kính râm','Quạt tay'], dapAn:0, giai:'Ô và áo mưa giúp bé không bị ướt.'},
+  {nhom:'Thiên nhiên', emoji:'🌳', cau:'Vì sao chúng ta cần trồng cây?', luaChon:['Cây cho bóng mát và không khí sạch','Cây để chặt chơi','Cây không có ích'], dapAn:0, giai:'Cây xanh cho bóng mát và không khí trong lành.'},
+  {nhom:'Thiên nhiên', emoji:'🐝', cau:'Thấy ong bay gần, bé nên làm gì?', luaChon:['Đứng yên và đi chậm ra xa','Đuổi bắt ong','Hét to và chạy nhanh'], dapAn:0, giai:'Đứng yên, đi chậm ra xa là cách an toàn nhất.'},
+  {nhom:'Giao thông', emoji:'🚦', cau:'Đèn đỏ bật sáng, người đi bộ làm gì?', luaChon:['Dừng lại','Chạy nhanh qua đường','Đi tiếp bình thường'], dapAn:0, giai:'Đèn đỏ nghĩa là dừng lại để an toàn.'},
+  {nhom:'Giao thông', emoji:'🚸', cau:'Khi qua đường, bé phải làm gì?', luaChon:['Nắm tay người lớn, nhìn hai bên','Chạy một mình thật nhanh','Vừa đi vừa chơi điện thoại'], dapAn:0, giai:'Qua đường phải nắm tay người lớn và quan sát hai bên.'},
+  {nhom:'Giao thông', emoji:'🛵', cau:'Ngồi sau xe máy, bé cần làm gì?', luaChon:['Đội mũ bảo hiểm','Không cần đội mũ','Đứng lên xe'], dapAn:0, giai:'Đội mũ bảo hiểm bảo vệ đầu của bé.'},
+  {nhom:'Kỹ năng sống', emoji:'🤝', cau:'Bạn làm rơi bút, bé nên làm gì?', luaChon:['Nhặt giúp bạn','Cười bạn','Giẫm lên bút'], dapAn:0, giai:'Giúp bạn là hành động đẹp, bạn sẽ rất vui.'},
+  {nhom:'Kỹ năng sống', emoji:'🙏', cau:'Khi được người khác giúp đỡ, bé nói gì?', luaChon:['Cảm ơn','Không nói gì','Đi luôn'], dapAn:0, giai:'Nói cảm ơn thể hiện bé lịch sự và biết ơn.'},
+  {nhom:'Kỹ năng sống', emoji:'🚰', cau:'Sau khi đi vệ sinh, bé cần làm gì?', luaChon:['Rửa tay bằng xà phòng','Chạy đi chơi ngay','Lau tay vào áo'], dapAn:0, giai:'Rửa tay sạch giúp bé không bị ốm.'},
+  {nhom:'Kỹ năng sống', emoji:'🔥', cau:'Thấy lửa cháy, bé nên làm gì?', luaChon:['Chạy ra ngoài và gọi người lớn','Tự dập lửa','Đứng xem lửa cháy'], dapAn:0, giai:'Gặp lửa phải tránh xa và gọi ngay người lớn.'},
+];
+</script>
+<script>
+/* ============================================================
+   PHẦN E2. TỪ VỰNG MỞ RỘNG CHO NGÂN HÀNG 1000 CÂU
+   - TU_VUNG: 60 từ có hình, dùng cho Nhìn hình đoán từ (x2 dạng hỏi)
+   - TU_CHINH_TA: 60 từ trên + 20 từ mới = 80 từ, dùng cho Chính tả
+   - TIENG_GHEP: 60 tiếng đơn giản, dùng cho Ghép âm trắc nghiệm
+   ============================================================ */
+const TU_VUNG = [
+  {emoji:'🐱', tu:'mèo'}, {emoji:'🐶', tu:'chó'}, {emoji:'🐟', tu:'cá'}, {emoji:'🐔', tu:'gà'},
+  {emoji:'🦆', tu:'vịt'}, {emoji:'🐄', tu:'bò'}, {emoji:'🐷', tu:'lợn'}, {emoji:'🐦', tu:'chim'},
+  {emoji:'🐰', tu:'thỏ'}, {emoji:'🐘', tu:'voi'}, {emoji:'🐵', tu:'khỉ'}, {emoji:'🐯', tu:'hổ'},
+  {emoji:'🍎', tu:'táo'}, {emoji:'🍌', tu:'chuối'}, {emoji:'🍊', tu:'cam'}, {emoji:'🍇', tu:'nho'},
+  {emoji:'🍐', tu:'lê'}, {emoji:'🥭', tu:'xoài'}, {emoji:'🍉', tu:'dưa'}, {emoji:'🍚', tu:'cơm'},
+  {emoji:'🍰', tu:'bánh'}, {emoji:'🥛', tu:'sữa'}, {emoji:'🥚', tu:'trứng'}, {emoji:'🥬', tu:'rau'},
+  {emoji:'📚', tu:'sách'}, {emoji:'✏️', tu:'bút'}, {emoji:'🎒', tu:'cặp'}, {emoji:'🪑', tu:'ghế'},
+  {emoji:'✂️', tu:'kéo'}, {emoji:'🚗', tu:'ô tô'}, {emoji:'🚲', tu:'xe đạp'}, {emoji:'⚽', tu:'bóng'},
+  {emoji:'🪁', tu:'diều'}, {emoji:'💡', tu:'đèn'}, {emoji:'⏰', tu:'đồng hồ'}, {emoji:'🏠', tu:'nhà'},
+  {emoji:'👩', tu:'mẹ'}, {emoji:'👨', tu:'bố'}, {emoji:'👵', tu:'bà'}, {emoji:'👴', tu:'ông'},
+  {emoji:'👧', tu:'bé'}, {emoji:'👦', tu:'bạn'}, {emoji:'🌸', tu:'hoa'}, {emoji:'🍃', tu:'lá'},
+  {emoji:'☀️', tu:'mặt trời'}, {emoji:'🌙', tu:'mặt trăng'}, {emoji:'⭐', tu:'sao'}, {emoji:'🌧️', tu:'mưa'},
+  {emoji:'🦀', tu:'cua'}, {emoji:'🦐', tu:'tôm'}, {emoji:'🐝', tu:'ong'}, {emoji:'🦋', tu:'bướm'},
+  {emoji:'🐢', tu:'rùa'}, {emoji:'🐜', tu:'kiến'}, {emoji:'🕷️', tu:'nhện'}, {emoji:'🐛', tu:'sâu'},
+  {emoji:'🐸', tu:'ếch'}, {emoji:'🐭', tu:'chuột'}, {emoji:'🐐', tu:'dê'}, {emoji:'🐴', tu:'ngựa'},
+];
+const TU_CHINH_TA = TU_VUNG.map(x=>x.tu).concat(
+  ['cửa','lớp','cô','thầy','anh','chị','em','nước','đường','vườn','sân','ao','ruộng','chợ','phố','làng','tóc','tay','chân','mắt']);
+const TIENG_GHEP = ['ba','be','bi','bo','bu','ca','ce','ci','co','cu','da','de','di','do','du','ga','ge','gi','go','gu','la','le','li','lo','lu','ma','me','mi','mo','mu','na','ne','ni','no','nu','ta','te','ti','to','tu','tha','the','thi','tho','thu','kha','khe','khi','kho','khu','sa','se','si','so','su','va','ve','vi','vo','vu'];
+</script>
+<script>
+/* ============================================================
+   PHẦN E3. CÂU HỎI CUỘC SỐNG MỞ RỘNG: 52 câu mới
+   13 câu mỗi chủ đề: Gia đình, Thiên nhiên, Giao thông, Kỹ năng sống.
+   Định dạng: dung = đáp án đúng, sai = 2 đáp án sai. Khi xây ngân
+   hàng, thứ tự đáp án sẽ được xáo trộn nên đáp án đúng không còn
+   luôn ở vị trí đầu tiên như bản đầu.
+   ============================================================ */
+const LIFE_MO_RONG = [
+  {nhom:'Gia đình', emoji:'👋', cau:'Bố mẹ đi làm về, bé nên làm gì?', dung:'Chào bố mẹ', sai:['Chạy đi chơi','Khóc to']},
+  {nhom:'Gia đình', emoji:'🥛', cau:'Bé làm vỡ cốc, bé nên làm gì?', dung:'Nói thật với bố mẹ', sai:['Giấu đi','Đổ lỗi cho em']},
+  {nhom:'Gia đình', emoji:'👶', cau:'Em bé khóc, anh chị nên làm gì?', dung:'Dỗ em ngoan', sai:['Trêu em','Bỏ đi chơi']},
+  {nhom:'Gia đình', emoji:'🍚', cau:'Cả nhà ăn cơm, bé nên làm gì?', dung:'Mời bố mẹ ăn cơm', sai:['Ăn trước một mình','Vừa ăn vừa chạy']},
+  {nhom:'Gia đình', emoji:'📖', cau:'Ông bà kể chuyện, bé nên làm gì?', dung:'Lắng nghe', sai:['Ngắt lời ông bà','Bỏ đi chỗ khác']},
+  {nhom:'Gia đình', emoji:'💯', cau:'Bé được điểm tốt, bé nên làm gì?', dung:'Chia sẻ vui với bố mẹ', sai:['Giấu đi','Nói dối']},
+  {nhom:'Gia đình', emoji:'🏠', cau:'Nhà có khách đến, bé nên làm gì?', dung:'Chào khách lễ phép', sai:['Trốn trong phòng','Hét to']},
+  {nhom:'Gia đình', emoji:'🧸', cau:'Bố mẹ đang bận, bé nên làm gì?', dung:'Tự chơi ngoan', sai:['Quấy khóc','Đòi mua đồ']},
+  {nhom:'Gia đình', emoji:'🎁', cau:'Bé muốn đồ chơi mới, bé nên làm gì?', dung:'Xin phép bố mẹ', sai:['Lấy trộm tiền','Khóc ăn vạ']},
+  {nhom:'Gia đình', emoji:'🤝', cau:'Anh em tranh đồ chơi, bé nên làm gì?', dung:'Nhường nhau chơi chung', sai:['Giành lấy đồ','Đánh nhau']},
+  {nhom:'Gia đình', emoji:'🥬', cau:'Bé giúp mẹ nhặt rau, đó là gì?', dung:'Bé ngoan giúp mẹ', sai:['Bé hư','Việc không cần làm']},
+  {nhom:'Gia đình', emoji:'🌙', cau:'Trước khi ngủ, bé nên làm gì?', dung:'Chúc bố mẹ ngủ ngon', sai:['Hét to','Chạy nhảy ầm ĩ']},
+  {nhom:'Gia đình', emoji:'🙏', cau:'Bé làm sai, bé nên làm gì?', dung:'Xin lỗi', sai:['Đổ lỗi cho người khác','Im lặng bỏ đi']},
+  {nhom:'Thiên nhiên', emoji:'🧢', cau:'Trời nắng to, bé cần làm gì?', dung:'Đội mũ', sai:['Không đội gì','Mặc áo mưa']},
+  {nhom:'Thiên nhiên', emoji:'🌸', cau:'Thấy hoa đẹp trong công viên, bé nên làm gì?', dung:'Ngắm hoa, không hái', sai:['Hái hết hoa','Giẫm lên hoa']},
+  {nhom:'Thiên nhiên', emoji:'🗑️', cau:'Bé thấy rác trên sân trường, bé nên làm gì?', dung:'Nhặt bỏ vào thùng rác', sai:['Đá rác đi','Mặc kệ rác']},
+  {nhom:'Thiên nhiên', emoji:'⛈️', cau:'Mưa to có sấm sét, bé nên làm gì?', dung:'Ở trong nhà', sai:['Ra sân chơi','Đứng dưới cây to']},
+  {nhom:'Thiên nhiên', emoji:'🌱', cau:'Bé tưới cây đều đặn, cây sẽ thế nào?', dung:'Lớn xanh tốt', sai:['Héo ngay','Biến thành hoa']},
+  {nhom:'Thiên nhiên', emoji:'🐦', cau:'Con chim bị thương, bé nên làm gì?', dung:'Gọi người lớn giúp', sai:['Bắt chim chơi','Bỏ mặc chim']},
+  {nhom:'Thiên nhiên', emoji:'🧥', cau:'Trời lạnh, bé cần làm gì?', dung:'Mặc áo ấm', sai:['Mặc áo mỏng','Tắm nước lạnh']},
+  {nhom:'Thiên nhiên', emoji:'🏕️', cau:'Bé đi dã ngoại, bé nên làm gì?', dung:'Giữ gìn vệ sinh chung', sai:['Vứt rác bừa bãi','Bẻ cành cây']},
+  {nhom:'Thiên nhiên', emoji:'🌅', cau:'Mặt trời mọc vào buổi nào?', dung:'Buổi sáng', sai:['Buổi tối','Ban đêm']},
+  {nhom:'Thiên nhiên', emoji:'🌈', cau:'Cầu vồng thường xuất hiện khi nào?', dung:'Sau cơn mưa có nắng', sai:['Ban đêm tối','Khi trời không mưa']},
+  {nhom:'Thiên nhiên', emoji:'🚰', cau:'Bé nên tiết kiệm nước bằng cách nào?', dung:'Khóa vòi khi không dùng', sai:['Mở vòi cả ngày','Chơi đùa với nước']},
+  {nhom:'Thiên nhiên', emoji:'🍃', cau:'Lá cây xanh tốt nhờ gì?', dung:'Ánh sáng mặt trời', sai:['Màu sơn','Ban đêm']},
+  {nhom:'Thiên nhiên', emoji:'🪹', cau:'Bé thấy tổ chim, bé nên làm gì?', dung:'Không chạm vào tổ', sai:['Lấy trứng về','Phá tổ chim']},
+  {nhom:'Giao thông', emoji:'🚦', cau:'Đèn xanh cho người đi bộ, bé làm gì?', dung:'Qua đường cùng người lớn', sai:['Chạy nhanh không nhìn','Dừng lại mãi']},
+  {nhom:'Giao thông', emoji:'🟡', cau:'Đèn vàng bật sáng, bé nên làm gì?', dung:'Chuẩn bị dừng lại', sai:['Chạy nhanh qua','Đi tiếp không nhìn']},
+  {nhom:'Giao thông', emoji:'🦓', cau:'Vạch kẻ trắng qua đường gọi là gì?', dung:'Vạch cho người đi bộ', sai:['Vạch vẽ chơi','Vạch cấm đi']},
+  {nhom:'Giao thông', emoji:'🚶', cau:'Đi bộ trên vỉa hè, bé đi bên nào?', dung:'Bên phải', sai:['Giữa lòng đường','Bên trái đường xe chạy']},
+  {nhom:'Giao thông', emoji:'🚗', cau:'Ngồi trên ô tô, bé nên làm gì?', dung:'Thắt dây an toàn', sai:['Đứng lên ghế','Thò đầu ra cửa sổ']},
+  {nhom:'Giao thông', emoji:'🚑', cau:'Thấy xe cứu thương hú còi, mọi người nên làm gì?', dung:'Nhường đường', sai:['Chặn đường xe','Chạy theo xe']},
+  {nhom:'Giao thông', emoji:'🚲', cau:'Bé đi xe đạp, bé nên làm gì?', dung:'Đội mũ bảo hiểm', sai:['Đi nhanh giữa đường','Buông hai tay']},
+  {nhom:'Giao thông', emoji:'🚸', cau:'Qua đường ở nơi không có đèn, bé nên làm gì?', dung:'Nhìn hai bên, nắm tay người lớn', sai:['Chạy ngay qua','Nhắm mắt đi']},
+  {nhom:'Giao thông', emoji:'⛔', cau:'Biển báo hình tròn viền đỏ thường là gì?', dung:'Biển cấm', sai:['Biển chỉ đường','Biển quảng cáo']},
+  {nhom:'Giao thông', emoji:'🛣️', cau:'Bé không nên chơi ở đâu?', dung:'Lòng đường', sai:['Sân chơi','Công viên']},
+  {nhom:'Giao thông', emoji:'🚌', cau:'Khi xe buýt dừng, bé nên làm gì?', dung:'Lên xe theo thứ tự', sai:['Chen lấn xô đẩy','Chạy trước đầu xe']},
+  {nhom:'Giao thông', emoji:'🌃', cau:'Trời tối đi đường, bé nên mặc áo thế nào?', dung:'Áo sáng màu dễ thấy', sai:['Áo đen toàn thân','Không cần chú ý']},
+  {nhom:'Giao thông', emoji:'➕', cau:'Gặp ngã tư, bé nên làm gì?', dung:'Dừng lại quan sát', sai:['Chạy thẳng qua','Nhắm mắt đi']},
+  {nhom:'Kỹ năng sống', emoji:'🗣️', cau:'Bé bị bạn trêu, bé nên làm gì?', dung:'Nói với cô giáo', sai:['Đánh bạn','Khóc một mình']},
+  {nhom:'Kỹ năng sống', emoji:'📏', cau:'Bé muốn mượn đồ của bạn, bé nên làm gì?', dung:'Hỏi mượn lịch sự', sai:['Lấy luôn không hỏi','Giấu đồ của bạn']},
+  {nhom:'Kỹ năng sống', emoji:'✏️', cau:'Bé làm bài sai, bé nên làm gì?', dung:'Hỏi cô giáo', sai:['Chép bài bạn','Bỏ bài không làm']},
+  {nhom:'Kỹ năng sống', emoji:'🤕', cau:'Bé thấy bạn ngã, bé nên làm gì?', dung:'Đỡ bạn dậy', sai:['Cười bạn','Bỏ đi chỗ khác']},
+  {nhom:'Kỹ năng sống', emoji:'🍽️', cau:'Bé ăn cơm xong, bé nên làm gì?', dung:'Dọn bát của mình', sai:['Để bát lung tung','Chạy đi chơi ngay']},
+  {nhom:'Kỹ năng sống', emoji:'🪥', cau:'Bé nên đánh răng mỗi ngày mấy lần?', dung:'2 lần sáng và tối', sai:['1 lần mỗi tuần','Không cần đánh răng']},
+  {nhom:'Kỹ năng sống', emoji:'🤧', cau:'Bé ho, bé nên làm gì?', dung:'Che miệng khi ho', sai:['Ho vào mặt bạn','Không che miệng']},
+  {nhom:'Kỹ năng sống', emoji:'🤒', cau:'Bé bị đau bụng, bé nên làm gì?', dung:'Nói với người lớn', sai:['Tự uống thuốc','Chịu đựng không nói']},
+  {nhom:'Kỹ năng sống', emoji:'🍬', cau:'Người lạ cho kẹo, bé nên làm gì?', dung:'Không nhận, nói với người lớn', sai:['Nhận ngay','Đi theo người lạ']},
+  {nhom:'Kỹ năng sống', emoji:'🗺️', cau:'Bé lạc đường, bé nên làm gì?', dung:'Đứng yên chỗ đông người, nhờ giúp', sai:['Chạy lung tung','Đi theo người lạ']},
+  {nhom:'Kỹ năng sống', emoji:'✂️', cau:'Bé dùng kéo, bé nên làm gì?', dung:'Dùng cẩn thận, không chĩa vào bạn', sai:['Chạy với kéo','Chĩa kéo vào bạn']},
+  {nhom:'Kỹ năng sống', emoji:'📺', cau:'Bé xem ti vi, bé nên làm gì?', dung:'Ngồi xa, xem vừa đủ', sai:['Ngồi sát ti vi cả ngày','Xem suốt đêm']},
+  {nhom:'Kỹ năng sống', emoji:'🔍', cau:'Bé nhặt được đồ của bạn, bé nên làm gì?', dung:'Trả lại bạn', sai:['Giữ làm của mình','Vứt đồ đi']},
+];
+</script>
+<script>
+/* ============================================================
+   PHẦN E4. XÂY NGÂN HÀNG 1000 CÂU HỎI (đếm được, không nói suông)
+   Phân bổ đúng 1000, cộng lại: 116+120+80+60 + 100+120+180+100+60 + 64
+   = Tiếng Việt 376 + Toán 560 + Cuộc sống 64 = 1000.
+   Mỗi lần vào game, app lấy ngẫu nhiên 8-10 câu từ đúng nhóm đó,
+   nên bé chơi nhiều lần vẫn gặp câu mới. Đáp án được xáo trộn
+   bằng tron() nên đáp án đúng không cố định ở một vị trí.
+   ============================================================ */
+function xayNganHang(){
+  const bank = [];
+  const them = (mon, game, cau, dapAn, sai, extra) => {
+    bank.push(Object.assign({mon, game, cau, dapAn, luaChon: tron([dapAn].concat(sai))}, extra || {}));
+  };
+  const saiSo = (dap, pool) => tron(pool.filter(x => x !== dap)).slice(0, 3);
+  /* --- Tiếng Việt: Nhận diện chữ cái: 29 chữ x 4 cách hỏi = 116 --- */
+  const cachHoi = ['Bé hãy chọn chữ: ', 'Tìm chữ ', 'Chữ nào dưới đây là chữ ', 'Bé nhìn và chọn đúng chữ '];
+  CHU_CAI.forEach((ch, i) => {
+    for (let v = 0; v < 4; v++) {
+      const sai = [];
+      [1 + v, 5 + v, 9 + v, 13 + v].forEach(off => {
+        const c = CHU_CAI[(i + off) % CHU_CAI.length];
+        if (c !== ch && sai.indexOf(c) < 0) sai.push(c);
+      });
+      them('viet', 'nhan', cachHoi[v] + ch, ch, sai.slice(0, 3), {doc: ch});
+    }
+  });
+  /* --- Tiếng Việt: Nhìn hình đoán từ: 60 từ x 2 cách hỏi = 120 --- */
+  TU_VUNG.forEach(it => {
+    [0, 1].forEach(v => {
+      them('viet', 'tu', v === 0 ? 'Hình này là gì?' : 'Bé nhìn hình và chọn đúng từ nhé!',
+        it.tu, saiSo(it.tu, TU_VUNG.map(x => x.tu)), {emoji: it.emoji});
+    });
+  });
+  /* --- Tiếng Việt: Chính tả: 80 từ, điền chữ đầu = 80 --- */
+  TU_CHINH_TA.forEach(w => {
+    const dap = w[0], rest = w.slice(1);
+    const poolChu = Array.from(new Set(TU_CHINH_TA.map(x => x[0])));
+    them('viet', 'chinh', 'Điền chữ còn thiếu: _' + rest, dap, saiSo(dap, poolChu), {giai: 'Từ đúng là: ' + w});
+  });
+  /* --- Tiếng Việt: Ghép âm trắc nghiệm: 60 tiếng = 60 --- */
+  TIENG_GHEP.forEach(tu => {
+    const on = (tu.indexOf('th') === 0 || tu.indexOf('kh') === 0) ? tu.slice(0, 2) : tu.slice(0, 1);
+    const am = tu.slice(on.length);
+    them('viet', 'ghepquiz', on + ' + ' + am + ' = ?', tu, saiSo(tu, TIENG_GHEP));
+  });
+  /* --- Toán: Đếm số: số 1-20 x 5 loại đồ vật = 100 --- */
+  const DEM_ICON = ['🍎', '⭐', '🐟', '🌸', '⚽'];
+  const demPool = []; for (let n = 1; n <= 20; n++) demPool.push(n);
+  for (let n = 1; n <= 20; n++) DEM_ICON.forEach(ic => {
+    them('toan', 'dem', 'Bé đếm xem có mấy?', n, saiSo(n, demPool), {emoji: ic.repeat(n)});
+  });
+  /* --- Toán: Cộng trừ trong 10: lấy 120 trong 132 phép = 120 --- */
+  const cong10 = [];
+  for (let a = 0; a <= 10; a++) for (let b = 0; b <= 10 - a; b++) cong10.push({cau: a + ' + ' + b + ' = ?', dap: a + b});
+  for (let a = 0; a <= 10; a++) for (let b = 0; b <= a; b++) cong10.push({cau: a + ' - ' + b + ' = ?', dap: a - b});
+  const pool10 = []; for (let n = 0; n <= 10; n++) pool10.push(n);
+  cong10.slice(0, 120).forEach(q => them('toan', 'cong10', q.cau, q.dap, saiSo(q.dap, pool10)));
+  /* --- Toán: Cộng trừ trong 100: tròn chục 81 + không nhớ 99 = 180 --- */
+  const cong100 = [];
+  for (let a = 10; a <= 90; a += 10) for (let b = 10; b <= 100 - a; b += 10) cong100.push({cau: a + ' + ' + b + ' = ?', dap: a + b});
+  for (let a = 20; a <= 90; a += 10) for (let b = 10; b < a; b += 10) cong100.push({cau: a + ' - ' + b + ' = ?', dap: a - b});
+  const khongNho = [];
+  for (let t1 = 1; t1 <= 8; t1++) for (let t2 = 1; t2 <= 9 - t1; t2++)
+    for (let u1 = 0; u1 <= 9; u1++) for (let u2 = 0; u2 <= 9 - u1; u2++) {
+      const a = t1 * 10 + u1, b = t2 * 10 + u2;
+      // Bỏ phép mà cả hai số đều tròn chục vì đã có ở nhóm tròn chục trên, tránh trùng câu
+      if (!(u1 === 0 && u2 === 0)) khongNho.push({cau: a + ' + ' + b + ' = ?', dap: a + b});
+    }
+  khongNho.slice(0, 99).forEach(q => cong100.push(q));
+  const pool100 = []; for (let n = 0; n <= 100; n += 10) pool100.push(n);
+  cong100.forEach(q => {
+    let sai = [q.dap - 10, q.dap + 10, q.dap - 1, q.dap + 1, q.dap - 2, q.dap + 2].filter(x => x >= 0 && x <= 100 && x !== q.dap);
+    sai = Array.from(new Set(sai));
+    pool100.forEach(c => { if (sai.length < 3 && c !== q.dap && sai.indexOf(c) < 0) sai.push(c); });
+    them('toan', 'cong100', q.cau, q.dap, tron(sai).slice(0, 3));
+  });
+  /* --- Toán: So sánh: 100 cặp (a, a+37 mod 101) = 100 --- */
+  for (let i = 0; i < 100; i++) {
+    const a = i, b = (i + 37) % 101;
+    const dap = a > b ? '>' : (a < b ? '<' : '=');
+    them('toan', 'sosanh', a + ' ? ' + b, dap, ['>', '<', '='].filter(x => x !== dap), {giai: a + ' ' + dap + ' ' + b});
+  }
+  /* --- Toán: Toán đố: 6 mẫu x 10 bộ số = 60 --- */
+  const mauCong = [[5,3],[6,4],[7,2],[4,5],[8,3],[9,1],[3,6],[10,2],[6,6],[5,5]];
+  const mauTru = [[9,4],[10,3],[8,2],[7,5],[6,1],[10,6],[9,7],[8,5],[7,3],[6,4]];
+  const mauToanDo = [
+    {cap: mauCong, hoi: (a,b) => 'Lan có ' + a + ' quả táo. Mẹ cho thêm ' + b + ' quả. Hỏi Lan có mấy quả táo?', dap: (a,b) => a + b},
+    {cap: mauTru, hoi: (a,b) => 'Trên cành có ' + a + ' con chim, bay đi ' + b + ' con. Hỏi còn mấy con chim?', dap: (a,b) => a - b},
+    {cap: mauCong, hoi: (a,b) => 'Bé có ' + a + ' viên bi xanh và ' + b + ' viên bi đỏ. Hỏi bé có tất cả mấy viên bi?', dap: (a,b) => a + b},
+    {cap: mauTru, hoi: (a,b) => 'An có ' + a + ' cái kẹo, An ăn ' + b + ' cái. Hỏi An còn mấy cái kẹo?', dap: (a,b) => a - b},
+    {cap: mauCong, hoi: (a,b) => 'Lớp 1A có ' + a + ' bạn nam và ' + b + ' bạn nữ. Hỏi lớp có mấy bạn?', dap: (a,b) => a + b},
+    {cap: mauTru, hoi: (a,b) => 'Mẹ mua ' + a + ' quả cam, cả nhà ăn hết ' + b + ' quả. Hỏi còn mấy quả cam?', dap: (a,b) => a - b},
+  ];
+  mauToanDo.forEach(m => m.cap.forEach(pair => {
+    const a = pair[0], b = pair[1], dap = m.dap(a, b);
+    const sai = tron([dap - 2, dap - 1, dap + 1, dap + 2, dap + 3].filter(x => x >= 0 && x !== dap)).slice(0, 3);
+    them('toan', 'toando', m.hoi(a, b), dap, sai);
+  }));
+  /* --- Cuộc sống: 12 câu gốc + 52 câu mở rộng = 64 --- */
+  CAU_HOI_SONG.concat(LIFE_MO_RONG).forEach(it => {
+    const dung = it.dung || it.luaChon[it.dapAn];
+    const sai = (it.sai || it.luaChon.filter((x, idx) => idx !== it.dapAn)).slice(0, 2);
+    them('life', 'song', it.cau, dung, sai, {nhom: it.nhom, emoji: it.emoji, giai: it.giai || ''});
+  });
+  return bank;
+}
+const NGAN_HANG = xayNganHang();
+function demTheo(mon, game){ return NGAN_HANG.filter(q => q.mon === mon && q.game === game).length; }
+</script>
+<script>
+/* ============================================================
+   PHẦN F. ĐIỀU HƯỚNG + DASHBOARD
+   ============================================================ */
+const MON_HOC = [
+  {id:'viet', ten:'Tiếng Việt', icon:'📚', lop:'mon-viet', moTa:'Học vần, ghép âm, tập đọc và chính tả thật vui!'},
+  {id:'toan', ten:'Toán học', icon:'🔢', lop:'mon-toan', moTa:'Đếm số, cộng trừ, so sánh và toán đố tư duy!'},
+  {id:'life', ten:'Tự nhiên, Xã hội & Đạo đức', icon:'🌍', lop:'mon-song', moTa:'Gia đình, thiên nhiên, giao thông và kỹ năng sống!'},
+];
+const GAME_THEO_MON = {
+  viet:[
+    {id:'chu', ten:'🔤 Học chữ cái', moTa:'Chạm vào từng chữ để nghe và xem ví dụ.'},
+    {id:'ghep', ten:'🧩 Ghép âm thành tiếng', moTa:'Chọn phụ âm + nguyên âm để ghép thành tiếng.'},
+    {id:'nhan', ten:'👀 Nhận diện chữ cái', moTa:'Nghe tên chữ, chọn đúng chữ trong 4 đáp án.'},
+    {id:'tu', ten:'🖼️ Nhìn hình đoán từ', moTa:'Nhìn hình, chọn đúng từ ngữ.'},
+    {id:'ghepquiz', ten:'🎯 Ghép âm trắc nghiệm', moTa:'Nghe phụ âm + nguyên âm, chọn tiếng đúng.'},
+    {id:'chinh', ten:'✏️ Chính tả điền chữ', moTa:'Điền chữ còn thiếu vào câu.'},
+    {id:'doc', ten:'📖 Tập đọc', moTa:'Nghe đọc mẫu rồi đọc theo từng câu.'},
+  ],
+  toan:[
+    {id:'dem', ten:'🍎 Đếm số', moTa:'Đếm đồ vật rồi chọn đúng số.'},
+    {id:'cong10', ten:'➕➖ Cộng trừ trong 10', moTa:'Cộng trừ nhanh trong phạm vi 10.'},
+    {id:'cong100', ten:'💯 Cộng trừ trong 100', moTa:'Cộng trừ tròn chục trong phạm vi 100.'},
+    {id:'sosanh', ten:'⚖️ Lớn hơn hay bé hơn?', moTa:'Chọn dấu > , < hoặc = cho đúng.'},
+    {id:'toando', ten:'🧠 Toán đố vui', moTa:'Đọc đề, suy nghĩ rồi chọn đáp án.'},
+  ],
+  life:[
+    {id:'song', ten:'🌟 Trắc nghiệm cuộc sống', moTa:'64 câu hỏi về gia đình, thiên nhiên, giao thông, kỹ năng sống.'},
+  ],
+};
+
+/* ===== data-amnhac.js (gộp bởi build.py) ===== */
+// ============================================================
+// MÔN ÂM NHẠC - 30 câu trắc nghiệm + bài tương tác chơi nốt nhạc
+// Bài tương tác dùng Web Audio API có sẵn (tone()), không dùng
+// file nhạc của sách, không chép lời bài hát trong sách.
+// ============================================================
+const AMNHAC_Q = [
+  {nhom:'Nhạc cụ', emoji:'🥁', cau:'Hình này là nhạc cụ gì?', dung:'Trống', sai:['Đàn guitar','Sáo']},
+  {nhom:'Nhạc cụ', emoji:'🎸', cau:'Hình này là nhạc cụ gì?', dung:'Đàn guitar', sai:['Trống','Kèn']},
+  {nhom:'Nhạc cụ', emoji:'🎹', cau:'Hình này là nhạc cụ gì?', dung:'Đàn piano', sai:['Sáo','Trống']},
+  {nhom:'Nhạc cụ', emoji:'🎺', cau:'Hình này là nhạc cụ gì?', dung:'Kèn', sai:['Đàn guitar','Trống']},
+  {nhom:'Nhạc cụ', emoji:'🪈', cau:'Nhạc cụ nào thổi bằng miệng?', dung:'Sáo', sai:['Trống','Đàn piano']},
+  {nhom:'Nhạc cụ', emoji:'🥁', cau:'Trống được chơi bằng cách nào?', dung:'Gõ', sai:['Thổi','Kéo']},
+  {nhom:'Nhạc cụ', emoji:'🎸', cau:'Đàn guitar được chơi bằng cách nào?', dung:'Gảy dây', sai:['Thổi','Gõ mạnh']},
+  {nhom:'Cao thấp', emoji:'🐦', cau:'Tiếng chim hót thường như thế nào?', dung:'Cao và trong', sai:['Trầm và nặng','Rất to và ồn']},
+  {nhom:'Cao thấp', emoji:'🐻', cau:'Tiếng gầm của gấu thường như thế nào?', dung:'Trầm và nặng', sai:['Cao và trong','Nhẹ như chim']},
+  {nhom:'Nhanh chậm', emoji:'🐇', cau:'Nhạc nhanh giống như con vật nào chạy?', dung:'Thỏ chạy nhanh', sai:['Rùa bò chậm','Gấu ngủ']},
+  {nhom:'Nhanh chậm', emoji:'🐢', cau:'Nhạc chậm giống như con vật nào?', dung:'Rùa bò chậm', sai:['Thỏ chạy nhanh','Chim bay nhanh']},
+  {nhom:'To nhỏ', emoji:'🔊', cau:'Khi hát to, giọng bé như thế nào?', dung:'To và rõ', sai:['Nhỏ không nghe thấy','Im lặng']},
+  {nhom:'To nhỏ', emoji:'🔈', cau:'Khi hát nhỏ, giọng bé như thế nào?', dung:'Nhỏ nhẹ', sai:['Hét thật to','Im lặng luôn']},
+  {nhom:'Hát', emoji:'🎤', cau:'Trước khi hát, bé nên làm gì?', dung:'Đứng ngay ngắn, hát rõ lời', sai:['Chạy quanh lớp','Hét to không rõ lời']},
+  {nhom:'Hát', emoji:'👏', cau:'Bạn hát hay, bé nên làm gì?', dung:'Vỗ tay khen bạn', sai:['Trêu bạn','Bịt tai lại']},
+  {nhom:'Hát', emoji:'🎵', cau:'Bài hát có gì?', dung:'Giai điệu và lời ca', sai:['Chỉ có tiếng ồn','Chỉ có hình vẽ']},
+  {nhom:'Nhịp', emoji:'👏', cau:'Vỗ tay theo nhịp giúp bé làm gì?', dung:'Hát đúng nhịp', sai:['Hát nhanh hơn','Không cần nghe nhạc']},
+  {nhom:'Nhịp', emoji:'🥁', cau:'Tiếng trống đều đặn giúp bé cảm nhận gì?', dung:'Nhịp của bài hát', sai:['Màu sắc','Hình dạng']},
+  {nhom:'Nghe', emoji:'👂', cau:'Nghe nhạc, bé nên làm gì?', dung:'Lắng nghe và cảm nhận', sai:['Hét to át nhạc','Bịt tai lại']},
+  {nhom:'Nghe', emoji:'🌧️', cau:'Âm thanh mưa rơi thường như thế nào?', dung:'Nhẹ nhàng, đều đều', sai:['Rất to và chói','Im lặng']},
+  {nhom:'Nghe', emoji:'🌊', cau:'Âm thanh sóng biển thường như thế nào?', dung:'Ào ào, lúc to lúc nhỏ', sai:['Im lặng','Chỉ có một nốt']},
+  {nhom:'Vận động', emoji:'💃', cau:'Nghe nhạc vui, bé có thể làm gì?', dung:'Nhún nhảy theo nhạc', sai:['Ngồi im không cử động','Chạy ra khỏi lớp']},
+  {nhom:'Vận động', emoji:'🕺', cau:'Múa theo nhạc giúp bé làm gì?', dung:'Vận động khỏe và vui', sai:['Mệt và buồn','Không học được gì']},
+  {nhom:'Âm thanh', emoji:'🔔', cau:'Tiếng chuông thường như thế nào?', dung:'Trong và vang', sai:['Trầm và nặng','Ồn ào']},
+  {nhom:'Âm thanh', emoji:'📣', cau:'Tiếng loa phóng thanh thường như thế nào?', dung:'To và rõ', sai:['Nhỏ không nghe','Chỉ có một nốt']},
+  {nhom:'Giữ gìn', emoji:'🎸', cau:'Chơi đàn xong, bé nên làm gì?', dung:'Để đàn gọn gàng', sai:['Ném đàn xuống đất','Để đàn ngoài mưa']},
+  {nhom:'Giữ gìn', emoji:'🥁', cau:'Chơi trống xong, bé nên làm gì?', dung:'Để trống đúng chỗ', sai:['Đập trống thật mạnh','Mang trống về nhà']},
+  {nhom:'Tập thể', emoji:'🎶', cau:'Cả lớp cùng hát, bé nên làm gì?', dung:'Hát cùng các bạn', sai:['Hát một mình thật to','Không hát gì']},
+  {nhom:'Tập thể', emoji:'👫', cau:'Hát tốp ca nghĩa là gì?', dung:'Nhiều bạn cùng hát', sai:['Một bạn hát','Không ai hát']},
+  {nhom:'Cảm xúc', emoji:'😊', cau:'Nghe bài hát vui, bé cảm thấy thế nào?', dung:'Vui vẻ', sai:['Buồn ngủ','Sợ hãi']},
+];
+MON_HOC.push({id:'amnhac', ten:'Âm nhạc', icon:'🎵', lop:'mon-viet', moTa:'Nghe nhạc cụ, cảm nhận cao thấp, nhanh chậm và chơi nốt nhạc!'});
+GAME_THEO_MON.amnhac = [
+  {id:'quiz', ten:'🎵 Trắc nghiệm Âm nhạc', moTa:'30 câu về nhạc cụ, cao thấp, nhanh chậm.'},
+  {id:'notnhac', ten:'🎹 Chơi nốt nhạc', moTa:'Bấm từng nốt Đô Rê Mi để nghe và chơi giai điệu.'},
+];
+AMNHAC_Q.forEach(it => {
+  NGAN_HANG.push({mon:'amnhac', game:'quiz', cau:it.cau, dapAn:it.dung, luaChon:tron([it.dung].concat(it.sai)), nhom:it.nhom, emoji:it.emoji});
+});
+// Bài tương tác: chơi nốt nhạc bằng Web Audio (tone() có sẵn ở lõi)
+function renderNotNhac(){
+  const not = [['Đô','C',261],['Rê','D',293],['Mi','E',329],['Fa','F',349],['Sol','G',392],['La','A',440],['Si','B',493]];
+  document.getElementById('noiDungGame').innerHTML =
+    '<div class="khung-bai"><h2>🎹 Chơi nốt nhạc</h2><p class="mo-ta">Bấm vào từng nốt để nghe. Sau đó bấm “Chơi giai điệu vui” để nghe một đoạn nhạc ngắn!</p>'
+    + '<div>' + not.map(n => '<span class="chu-cai" style="width:74px" onclick="tone(' + n[2] + ',0.5)">' + n[0] + '</span>').join('') + '</div>'
+    + '<div class="ke-trang"><button class="nut nut-hong" onclick="choiGiaiDieu()">🎶 Chơi giai điệu vui</button>'
+    + '<button class="nut nut-xanh" onclick="hoanThanhNhac()">✅ Bé chơi xong! Nhận sao</button></div></div>';
+  hienManHinh('manHinhGame');
+}
+function choiGiaiDieu(){
+  [261,329,392,523,392,329,261].forEach((f,i) => tone(f, 0.35, 'triangle', i * 0.3));
+}
+function hoanThanhNhac(){
+  amHoanThanh(); state.stars += 3; state.points += 20; luu(); kiemTraHuyHieu(); capNhatTieuDe();
+  toast('🎉 Tuyệt vời! Bé được +3 sao vì đã chơi nốt nhạc!');
+  veTrangChu();
+}
+
+
+/* ===== data-daoduc.js (gộp bởi build.py) ===== */
+// ============================================================
+// MÔN ĐẠO ĐỨC - 40 câu trắc nghiệm (bài tập tự biên, không sao
+// chép nguyên văn sách). Chủ đề: lễ phép, trung thực, yêu thương,
+// giữ vệ sinh, tiết kiệm, giúp đỡ, tôn trọng.
+// Định dạng chung: {nhom, emoji, cau, dung, sai:[...], giai}
+// Khi nạp, đáp án được xáo trộn bằng tron().
+// ============================================================
+const DAODUC_Q = [
+  {nhom:'Lễ phép', emoji:'🙏', cau:'Gặp cô giáo buổi sáng, bé nên làm gì?', dung:'Chào cô giáo', sai:['Quay mặt đi','Hét to'], giai:'Chào hỏi lễ phép là bé ngoan.'},
+  {nhom:'Lễ phép', emoji:'🍚', cau:'Trước khi ăn cơm, bé nên làm gì?', dung:'Mời ông bà, bố mẹ ăn cơm', sai:['Ăn trước một mình','Vừa ăn vừa chạy'], giai:'Mời người lớn trước là lễ phép.'},
+  {nhom:'Lễ phép', emoji:'🚪', cau:'Muốn vào phòng của người khác, bé nên làm gì?', dung:'Gõ cửa và xin phép', sai:['Xông thẳng vào','Mở cửa lén'], giai:'Gõ cửa là tôn trọng người khác.'},
+  {nhom:'Lễ phép', emoji:'🙇', cau:'Bé làm phiền người khác, bé nên nói gì?', dung:'Xin lỗi', sai:['Cười to','Bỏ đi'], giai:'Xin lỗi khi làm phiền là lịch sự.'},
+  {nhom:'Trung thực', emoji:'💯', cau:'Bé làm bài sai, bé nên làm gì?', dung:'Nói thật với cô giáo', sai:['Chép bài bạn','Giấu bài đi'], giai:'Trung thực giúp bé tiến bộ.'},
+  {nhom:'Trung thực', emoji:'🥛', cau:'Bé làm vỡ cốc, bé nên làm gì?', dung:'Nhận lỗi và nói thật', sai:['Đổ lỗi cho em','Giấu mảnh vỡ'], giai:'Nhận lỗi là dũng cảm và trung thực.'},
+  {nhom:'Trung thực', emoji:'🔍', cau:'Bé nhặt được tiền, bé nên làm gì?', dung:'Đưa cho cô giáo hoặc người lớn', sai:['Giữ làm của mình','Tiêu hết'], giai:'Nhặt được của rơi phải trả lại.'},
+  {nhom:'Trung thực', emoji:'📝', cau:'Trong giờ kiểm tra, bé nên làm gì?', dung:'Tự làm bài của mình', sai:['Nhìn bài bạn','Hỏi bạn đáp án'], giai:'Tự làm bài là trung thực.'},
+  {nhom:'Yêu thương', emoji:'❤️', cau:'Bạn bị ốm nghỉ học, bé nên làm gì?', dung:'Hỏi thăm bạn', sai:['Trêu bạn ốm','Mặc kệ bạn'], giai:'Hỏi thăm bạn là yêu thương.'},
+  {nhom:'Yêu thương', emoji:'👵', cau:'Ông bà mệt, bé nên làm gì?', dung:'Nhẹ nhàng, không làm ồn', sai:['Hét to','Chạy nhảy ầm ĩ'], giai:'Yêu thương ông bà bằng hành động nhẹ nhàng.'},
+  {nhom:'Yêu thương', emoji:'🐱', cau:'Bé thấy mèo con bị ướt mưa, bé nên làm gì?', dung:'Gọi người lớn giúp mèo', sai:['Ném đá vào mèo','Bỏ mặc mèo'], giai:'Yêu thương cả con vật.'},
+  {nhom:'Yêu thương', emoji:'🤝', cau:'Bạn mới vào lớp chưa quen ai, bé nên làm gì?', dung:'Làm quen và chơi cùng bạn', sai:['Trêu bạn mới','Không chơi với bạn'], giai:'Chào đón bạn mới là yêu thương.'},
+  {nhom:'Giữ vệ sinh', emoji:'🪥', cau:'Sau khi ăn, bé nên làm gì?', dung:'Đánh răng', sai:['Đi ngủ ngay','Ăn thêm kẹo'], giai:'Đánh răng giữ răng sạch khỏe.'},
+  {nhom:'Giữ vệ sinh', emoji:'🧼', cau:'Trước khi ăn, bé nên làm gì?', dung:'Rửa tay sạch', sai:['Ăn luôn không rửa','Lau tay vào áo'], giai:'Rửa tay trước khi ăn.'},
+  {nhom:'Giữ vệ sinh', emoji:'🗑️', cau:'Vỏ bánh kẹo sau khi ăn, bé bỏ ở đâu?', dung:'Thùng rác', sai:['Sân trường','Gầm bàn'], giai:'Bỏ rác đúng nơi.'},
+  {nhom:'Giữ vệ sinh', emoji:'👕', cau:'Áo quần bẩn, bé nên làm gì?', dung:'Thay áo sạch', sai:['Mặc tiếp nhiều ngày','Vứt áo đi'], giai:'Mặc áo sạch là giữ vệ sinh.'},
+  {nhom:'Tiết kiệm', emoji:'💡', cau:'Ra khỏi phòng, bé nên làm gì với đèn?', dung:'Tắt đèn', sai:['Để đèn sáng cả ngày','Bật thêm đèn'], giai:'Tắt đèn khi không dùng là tiết kiệm điện.'},
+  {nhom:'Tiết kiệm', emoji:'🚰', cau:'Đánh răng xong, bé nên làm gì với vòi nước?', dung:'Khóa vòi nước', sai:['Để nước chảy','Mở vòi to hơn'], giai:'Khóa vòi là tiết kiệm nước.'},
+  {nhom:'Tiết kiệm', emoji:'📄', cau:'Giấy còn viết được, bé nên làm gì?', dung:'Dùng hết giấy rồi mới lấy tờ mới', sai:['Vò giấy chơi','Xé giấy'], giai:'Tiết kiệm giấy là bảo vệ cây xanh.'},
+  {nhom:'Tiết kiệm', emoji:'🍚', cau:'Ăn cơm, bé nên làm gì?', dung:'Ăn hết phần cơm của mình', sai:['Bỏ thừa nhiều cơm','Đổ cơm đi'], giai:'Không lãng phí thức ăn.'},
+  {nhom:'Giúp đỡ', emoji:'🧹', cau:'Lớp học bẩn, bé nên làm gì?', dung:'Cùng bạn dọn lớp', sai:['Đứng xem','Vứt thêm rác'], giai:'Cùng dọn lớp là giúp đỡ tập thể.'},
+  {nhom:'Giúp đỡ', emoji:'🎒', cau:'Bạn quên mang bút, bé nên làm gì?', dung:'Cho bạn mượn bút', sai:['Cười bạn','Giấu bút đi'], giai:'Cho mượn đồ là giúp bạn.'},
+  {nhom:'Giúp đỡ', emoji:'👶', cau:'Em nhỏ ngã, bé nên làm gì?', dung:'Đỡ em dậy', sai:['Cười em','Bỏ đi'], giai:'Đỡ em dậy là giúp đỡ.'},
+  {nhom:'Giúp đỡ', emoji:'🌱', cau:'Cây trong lớp héo, bé nên làm gì?', dung:'Tưới nước cho cây', sai:['Nhổ cây lên','Mặc kệ cây'], giai:'Chăm cây là giúp lớp xanh.'},
+  {nhom:'Tôn trọng', emoji:'🤫', cau:'Cô giáo đang giảng bài, bé nên làm gì?', dung:'Ngồi nghe và giơ tay khi muốn nói', sai:['Nói chuyện riêng','Hét to'], giai:'Nghe cô giảng là tôn trọng cô.'},
+  {nhom:'Tôn trọng', emoji:'📚', cau:'Mượn sách của bạn, bé nên làm gì?', dung:'Giữ sách sạch, trả đúng hẹn', sai:['Vẽ bậy vào sách','Không trả sách'], giai:'Giữ gìn đồ mượn là tôn trọng bạn.'},
+  {nhom:'Tôn trọng', emoji:'🎵', cau:'Bạn đang hát, bé nên làm gì?', dung:'Lắng nghe bạn hát', sai:['Hét to át tiếng bạn','Trêu bạn hát dở'], giai:'Lắng nghe là tôn trọng bạn.'},
+  {nhom:'Tôn trọng', emoji:'🧑‍🤝‍🧑', cau:'Bạn khác với bé, bé nên làm gì?', dung:'Tôn trọng và chơi cùng bạn', sai:['Trêu bạn','Không chơi với bạn'], giai:'Mọi bạn đều đáng được tôn trọng.'},
+  {nhom:'An toàn', emoji:'🔥', cau:'Bé thấy diêm và bật lửa, bé nên làm gì?', dung:'Không nghịch, nói với người lớn', sai:['Bật lửa chơi','Giấu diêm đi'], giai:'Không nghịch lửa.'},
+  {nhom:'An toàn', emoji:'🔌', cau:'Ổ điện trong nhà, bé nên làm gì?', dung:'Không chọc tay vào ổ điện', sai:['Chọc que vào ổ điện','Sờ vào ổ điện'], giai:'Ổ điện rất nguy hiểm.'},
+  {nhom:'An toàn', emoji:'🚸', cau:'Đi học một mình, bé nên đi đường nào?', dung:'Đường quen, có người lớn dặn', sai:['Đường vắng một mình','Đi theo người lạ'], giai:'Đi đường an toàn, quen thuộc.'},
+  {nhom:'Bảo vệ môi trường', emoji:'🌳', cau:'Bé nên làm gì để sân trường xanh?', dung:'Trồng và chăm cây', sai:['Bẻ cành cây','Giẫm lên cỏ'], giai:'Trồng cây làm sân trường xanh.'},
+  {nhom:'Bảo vệ môi trường', emoji:'🐦', cau:'Bé nên làm gì với chim trong sân trường?', dung:'Để chim tự do bay', sai:['Bắt chim nhốt','Ném đá vào chim'], giai:'Bảo vệ chim là bảo vệ thiên nhiên.'},
+  {nhom:'Bảo vệ môi trường', emoji:'♻️', cau:'Chai nhựa đã dùng, bé nên làm gì?', dung:'Bỏ vào thùng tái chế', sai:['Vứt xuống sông','Đốt chai'], giai:'Phân loại rác giúp môi trường sạch.'},
+  {nhom:'Kỷ luật', emoji:'⏰', cau:'Đến giờ học, bé nên làm gì?', dung:'Vào lớp đúng giờ', sai:['Đi học muộn','Chơi ở sân không vào lớp'], giai:'Đúng giờ là kỷ luật.'},
+  {nhom:'Kỷ luật', emoji:'🪑', cau:'Trong giờ học, bé nên làm gì?', dung:'Ngồi ngay ngắn, chú ý nghe', sai:['Chạy quanh lớp','Nằm ra bàn'], giai:'Ngồi học nghiêm túc.'},
+  {nhom:'Kỷ luật', emoji:'🎒', cau:'Tối trước khi đi học, bé nên làm gì?', dung:'Chuẩn bị sách vở gọn gàng', sai:['Để sách vở lung tung','Không chuẩn bị gì'], giai:'Chuẩn bị trước giúp bé không quên đồ.'},
+  {nhom:'Chăm chỉ', emoji:'📖', cau:'Bài tập khó, bé nên làm gì?', dung:'Cố gắng làm, hỏi cô khi cần', sai:['Bỏ bài không làm','Nhờ bạn làm hộ'], giai:'Chăm chỉ giúp bé giỏi lên.'},
+  {nhom:'Chăm chỉ', emoji:'✏️', cau:'Chữ bé viết chưa đẹp, bé nên làm gì?', dung:'Luyện viết mỗi ngày', sai:['Không viết nữa','Viết ẩu cho xong'], giai:'Luyện tập mỗi ngày sẽ đẹp lên.'},
+  {nhom:'Hiếu thảo', emoji:'❤️', cau:'Mẹ mệt sau ngày làm việc, bé nên làm gì?', dung:'Rót nước mời mẹ, nói nhẹ nhàng', sai:['Đòi mẹ chơi cùng ngay','Hét to đòi đồ'], giai:'Hiếu thảo với bố mẹ.'},
+];
+// Đăng ký môn + nạp câu hỏi vào ngân hàng chung
+MON_HOC.push({id:'daoduc', ten:'Đạo đức', icon:'❤️', lop:'mon-song', moTa:'Lễ phép, trung thực, yêu thương và giúp đỡ mọi người!'});
+GAME_THEO_MON.daoduc = [
+  {id:'quiz', ten:'🌟 Trắc nghiệm Đạo đức', moTa:'40 câu hỏi về cách cư xử đẹp.'},
+];
+DAODUC_Q.forEach(it => {
+  NGAN_HANG.push({mon:'daoduc', game:'quiz', cau:it.cau, dapAn:it.dung, luaChon:tron([it.dung].concat(it.sai)), nhom:it.nhom, emoji:it.emoji, giai:it.giai});
+});
+
+
+/* ===== data-mithuat.js (gộp bởi build.py) ===== */
+// ============================================================
+// MÔN MĨ THUẬT - 30 câu trắc nghiệm + bảng vẽ tự do (canvas)
+// Bảng vẽ chỉ dùng chuột / ngón tay trên chính trình duyệt,
+// không tải ảnh lên mạng, không dùng ảnh trong sách.
+// ============================================================
+const MITHUAT_Q = [
+  {nhom:'Màu sắc', emoji:'🔴', cau:'Màu này là màu gì?', dung:'Màu đỏ', sai:['Màu xanh','Màu vàng']},
+  {nhom:'Màu sắc', emoji:'🟡', cau:'Màu này là màu gì?', dung:'Màu vàng', sai:['Màu đỏ','Màu tím']},
+  {nhom:'Màu sắc', emoji:'🔵', cau:'Màu này là màu gì?', dung:'Màu xanh dương', sai:['Màu đỏ','Màu cam']},
+  {nhom:'Màu sắc', emoji:'🟢', cau:'Màu này là màu gì?', dung:'Màu xanh lá', sai:['Màu vàng','Màu hồng']},
+  {nhom:'Màu sắc', emoji:'🟠', cau:'Màu cam được tạo từ hai màu nào?', dung:'Đỏ và vàng', sai:['Xanh và đỏ','Vàng và xanh']},
+  {nhom:'Màu sắc', emoji:'🟣', cau:'Màu tím được tạo từ hai màu nào?', dung:'Đỏ và xanh dương', sai:['Vàng và đỏ','Xanh lá và vàng']},
+  {nhom:'Màu sắc', emoji:'☀️', cau:'Mặt trời thường được tô màu gì?', dung:'Màu vàng', sai:['Màu đen','Màu tím']},
+  {nhom:'Màu sắc', emoji:'🌳', cau:'Lá cây thường được tô màu gì?', dung:'Màu xanh lá', sai:['Màu đỏ','Màu trắng']},
+  {nhom:'Hình dạng', emoji:'⭕', cau:'Hình này là hình gì?', dung:'Hình tròn', sai:['Hình vuông','Hình tam giác']},
+  {nhom:'Hình dạng', emoji:'⬛', cau:'Hình này là hình gì?', dung:'Hình vuông', sai:['Hình tròn','Hình tam giác']},
+  {nhom:'Hình dạng', emoji:'🔺', cau:'Hình này là hình gì?', dung:'Hình tam giác', sai:['Hình tròn','Hình vuông']},
+  {nhom:'Hình dạng', emoji:'⬛', cau:'Hình chữ nhật khác hình vuông ở điểm nào?', dung:'Có hai cạnh dài, hai cạnh ngắn', sai:['Không có góc','Là hình tròn']},
+  {nhom:'Hình dạng', emoji:'🍎', cau:'Quả táo gần giống hình gì?', dung:'Hình tròn', sai:['Hình vuông','Hình tam giác']},
+  {nhom:'Hình dạng', emoji:'🏠', cau:'Mái nhà thường giống hình gì?', dung:'Hình tam giác', sai:['Hình tròn','Hình vuông']},
+  {nhom:'Dụng cụ', emoji:'🖍️', cau:'Dụng cụ này dùng để làm gì?', dung:'Tô màu', sai:['Cắt giấy','Dán giấy']},
+  {nhom:'Dụng cụ', emoji:'✏️', cau:'Bút chì dùng để làm gì?', dung:'Vẽ phác', sai:['Tô màu nước','Cắt giấy']},
+  {nhom:'Dụng cụ', emoji:'✂️', cau:'Kéo dùng để làm gì?', dung:'Cắt giấy', sai:['Tô màu','Vẽ']},
+  {nhom:'Dụng cụ', emoji:'📄', cau:'Bé vẽ lên đâu?', dung:'Giấy vẽ', sai:['Bàn học','Tường lớp']},
+  {nhom:'Dụng cụ', emoji:'🎨', cau:'Bảng màu dùng để làm gì?', dung:'Pha và đựng màu', sai:['Cắt giấy','Dán tranh']},
+  {nhom:'Giữ gìn', emoji:'🧹', cau:'Vẽ xong, bé nên làm gì?', dung:'Dọn bàn sạch, cất đồ gọn', sai:['Để đồ lung tung','Vứt màu xuống đất']},
+  {nhom:'Giữ gìn', emoji:'👕', cau:'Khi tô màu nước, bé nên làm gì?', dung:'Mặc áo cũ hoặc đeo tạp dề', sai:['Mặc áo trắng mới','Tô lên áo']},
+  {nhom:'Quan sát', emoji:'🌸', cau:'Vẽ bông hoa, bé nên quan sát gì?', dung:'Màu hoa, cánh hoa, lá', sai:['Chỉ nhìn lướt qua','Không cần nhìn']},
+  {nhom:'Quan sát', emoji:'🐱', cau:'Vẽ con mèo, bé nên quan sát gì?', dung:'Tai, mắt, râu, đuôi mèo', sai:['Chỉ vẽ một đường','Không cần quan sát']},
+  {nhom:'Sáng tạo', emoji:'🌈', cau:'Tranh của bé có thể có màu gì?', dung:'Màu bé thích, miễn là đẹp và gọn', sai:['Chỉ được một màu','Màu nào cũng được, vẽ bừa']},
+  {nhom:'Sáng tạo', emoji:'🎨', cau:'Bé vẽ tranh về gia đình, bé vẽ ai?', dung:'Bố mẹ và các thành viên trong nhà', sai:['Chỉ vẽ mình bé','Vẽ người lạ']},
+  {nhom:'Trưng bày', emoji:'🖼️', cau:'Tranh vẽ xong, bé nên làm gì?', dung:'Giữ gìn và khoe với bố mẹ, cô giáo', sai:['Vò tranh vứt đi','Xé tranh']},
+  {nhom:'Trưng bày', emoji:'🏫', cau:'Tranh đẹp của lớp thường được làm gì?', dung:'Treo lên tường lớp', sai:['Cất vào thùng rác','Giấu đi']},
+  {nhom:'Màu nóng lạnh', emoji:'🔥', cau:'Màu đỏ, cam, vàng thường gọi là màu gì?', dung:'Màu nóng', sai:['Màu lạnh','Màu tối']},
+  {nhom:'Màu nóng lạnh', emoji:'❄️', cau:'Màu xanh dương, xanh lá thường gọi là màu gì?', dung:'Màu lạnh', sai:['Màu nóng','Màu tối']},
+  {nhom:'Đường nét', emoji:'〰️', cau:'Đường lượn sóng giống gì?', dung:'Sóng nước', sai:['Đường thẳng','Hình tròn']},
+];
+MON_HOC.push({id:'mithuat', ten:'Mĩ thuật', icon:'🎨', lop:'mon-toan', moTa:'Nhận biết màu sắc, hình dạng và vẽ tự do trên bảng vẽ!'});
+GAME_THEO_MON.mithuat = [
+  {id:'quiz', ten:'🎨 Trắc nghiệm Mĩ thuật', moTa:'30 câu về màu sắc, hình dạng, dụng cụ vẽ.'},
+  {id:'ve', ten:'🖌️ Bảng vẽ tự do', moTa:'Chọn màu và vẽ bằng chuột hoặc ngón tay.'},
+];
+MITHUAT_Q.forEach(it => {
+  NGAN_HANG.push({mon:'mithuat', game:'quiz', cau:it.cau, dapAn:it.dung, luaChon:tron([it.dung].concat(it.sai)), nhom:it.nhom, emoji:it.emoji});
+});
+let _veColor = '#ff5d8f', _veDangVe = false;
+function renderVe(){
+  document.getElementById('noiDungGame').innerHTML =
+    '<div class="khung-bai"><h2>🖌️ Bảng vẽ tự do</h2><p class="mo-ta">Chọn màu, rồi vẽ bằng chuột hoặc ngón tay lên bảng dưới đây nhé!</p>'
+    + '<div style="margin-bottom:12px">' + ['#ff5d8f','#ff8c42','#ffc93c','#2ec4b6','#4a90e2','#9b5de5','#333333'].map(c =>
+        '<button class="nut nut-nho" style="background:' + c + ';color:#fff !important" onclick="_veColor=\'' + c + '\';amClick()">●</button>').join(' ') + '</div>'
+    + '<canvas id="veCanvas" width="800" height="380" style="width:100%;max-width:800px;border:3px solid #ffc93c;border-radius:18px;background:#fff;touch-action:none"></canvas>'
+    + '<div class="ke-trang"><button class="nut nut-vang" onclick="xoaVe()">🧹 Xóa bảng</button>'
+    + '<button class="nut nut-hong" onclick="hoanThanhVe()">✅ Bé vẽ xong! Nhận sao</button></div></div>';
+  hienManHinh('manHinhGame');
+  const cv = document.getElementById('veCanvas'), ctx = cv.getContext('2d');
+  ctx.lineWidth = 6; ctx.lineCap = 'round';
+  function pos(e){
+    const r = cv.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return {x: (t.clientX - r.left) * cv.width / r.width, y: (t.clientY - r.top) * cv.height / r.height};
+  }
+  function batDau(e){ e.preventDefault(); _veDangVe = true; const p = pos(e); ctx.strokeStyle = _veColor; ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+  function ve(e){ if(!_veDangVe) return; e.preventDefault(); const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+  function ketThuc(){ _veDangVe = false; }
+  cv.addEventListener('mousedown', batDau); cv.addEventListener('mousemove', ve);
+  window.addEventListener('mouseup', ketThuc);
+  cv.addEventListener('touchstart', batDau, {passive:false}); cv.addEventListener('touchmove', ve, {passive:false});
+  cv.addEventListener('touchend', ketThuc);
+}
+function xoaVe(){
+  const cv = document.getElementById('veCanvas'); if(!cv) return;
+  cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); amClick();
+}
+function hoanThanhVe(){
+  amHoanThanh(); state.stars += 3; state.points += 20; luu(); kiemTraHuyHieu(); capNhatTieuDe();
+  toast('🎉 Tuyệt vời! Bé được +3 sao vì đã vẽ xong!');
+  veTrangChu();
+}
+
+
+/* ===== data-thechat.js (gộp bởi build.py) ===== */
+// ============================================================
+// MÔN GIÁO DỤC THỂ CHẤT - 30 câu trắc nghiệm + bài vận động đếm số
+// Bài vận động chỉ là hướng dẫn nhẹ nhàng trong lớp / ở nhà có
+// người lớn bên cạnh, không thay thế giờ học thể chất của trường.
+// ============================================================
+const THECHAT_Q = [
+  {nhom:'Khởi động', emoji:'🤸', cau:'Trước khi vận động, bé nên làm gì?', dung:'Khởi động nhẹ nhàng', sai:['Chạy ngay thật nhanh','Ngồi im không cử động']},
+  {nhom:'Khởi động', emoji:'🦵', cau:'Khởi động giúp cơ thể bé làm gì?', dung:'Nóng lên, tránh bị đau', sai:['Mệt ngay','Không có tác dụng']},
+  {nhom:'Khởi động', emoji:'🙆', cau:'Khởi động tay, bé nên làm gì?', dung:'Xoay tay nhẹ nhàng', sai:['Vung tay thật mạnh','Không cử động tay']},
+  {nhom:'Đi bộ', emoji:'🚶', cau:'Đi bộ đúng cách, bé nên làm gì?', dung:'Đi thẳng người, bước đều', sai:['Đi lom khom','Chạy lung tung']},
+  {nhom:'Chạy', emoji:'🏃', cau:'Chạy trong sân trường, bé nên chạy ở đâu?', dung:'Chạy ở sân, tránh chỗ đông người', sai:['Chạy trong lớp học','Chạy ra đường']},
+  {nhom:'Chạy', emoji:'🛑', cau:'Nghe hiệu lệnh dừng, bé nên làm gì?', dung:'Dừng lại ngay', sai:['Chạy tiếp','Quay lại chạy ngược']},
+  {nhom:'Nhảy', emoji:'🦘', cau:'Nhảy lò cò, bé nhảy bằng mấy chân?', dung:'Một chân', sai:['Hai chân cùng lúc','Không cần chân']},
+  {nhom:'Nhảy', emoji:'⬆️', cau:'Nhảy lên, bé tiếp đất bằng gì?', dung:'Hai bàn chân, hơi chùng gối', sai:['Đầu gối thẳng cứng','Một bàn chân']},
+  {nhom:'Bóng', emoji:'⚽', cau:'Chơi bóng, bé nên làm gì?', dung:'Chơi cùng bạn, không đá vào bạn', sai:['Đá bóng vào bạn','Giành bóng một mình']},
+  {nhom:'Bóng', emoji:'🏀', cau:'Ném bóng vào rổ, bé nên làm gì?', dung:'Ngắm rổ rồi ném nhẹ', sai:['Ném thật mạnh vào bạn','Ném bóng ra ngoài sân']},
+  {nhom:'An toàn', emoji:'🩹', cau:'Bé bị ngã trầy xước nhẹ, bé nên làm gì?', dung:'Nói với cô giáo, rửa vết thương', sai:['Giấu không nói','Tự bôi thuốc lạ']},
+  {nhom:'An toàn', emoji:'🧗', cau:'Chơi cầu trượt, bé nên làm gì?', dung:'Xếp hàng, trượt một mình một lượt', sai:['Chen lấn trượt cùng lúc','Trèo ngược cầu trượt']},
+  {nhom:'An toàn', emoji:'🪢', cau:'Chơi xích đu, bé nên làm gì?', dung:'Ngồi chắc, không đứng lên đu', sai:['Đứng lên đu thật cao','Nhảy khỏi đu đang đu']},
+  {nhom:'An toàn', emoji:'🌞', cau:'Vận động ngoài nắng, bé cần gì?', dung:'Đội mũ và uống nước', sai:['Không đội mũ, không uống nước','Mặc áo dày']},
+  {nhom:'Uống nước', emoji:'💧', cau:'Sau khi vận động, bé nên uống nước thế nào?', dung:'Uống từng ngụm nhỏ', sai:['Uống một hơi thật nhiều','Không uống nước']},
+  {nhom:'Uống nước', emoji:'🥤', cau:'Khi khát sau khi chạy, bé nên uống gì?', dung:'Nước lọc', sai:['Nước ngọt có ga','Không uống gì']},
+  {nhom:'Nghỉ ngơi', emoji:'😮‍💨', cau:'Sau khi vận động mệt, bé nên làm gì?', dung:'Đi bộ chậm và thở đều', sai:['Ngồi xổm ngay','Chạy tiếp']},
+  {nhom:'Nghỉ ngơi', emoji:'🛌', cau:'Tối trước ngày học thể chất, bé nên làm gì?', dung:'Ngủ đủ giấc', sai:['Thức khuya chơi','Không ngủ']},
+  {nhom:'Trang phục', emoji:'👟', cau:'Học thể chất, bé nên mang gì?', dung:'Giày thể thao', sai:['Dép lê','Giày cao gót']},
+  {nhom:'Trang phục', emoji:'👕', cau:'Học thể chất, bé nên mặc gì?', dung:'Quần áo thoải mái', sai:['Áo dài bó sát','Quần áo dày nhiều lớp']},
+  {nhom:'Đội nhóm', emoji:'🤝', cau:'Chơi trò chơi tập thể, bé nên làm gì?', dung:'Chơi cùng đội, tuân thủ luật', sai:['Chơi một mình','Phá luật chơi']},
+  {nhom:'Đội nhóm', emoji:'🏆', cau:'Đội bé thua trò chơi, bé nên làm gì?', dung:'Vui vẻ, chúc mừng đội bạn', sai:['Khóc và giận bạn','Đổ lỗi cho bạn']},
+  {nhom:'Đội nhóm', emoji:'👏', cau:'Bạn trong đội làm tốt, bé nên làm gì?', dung:'Khen và vỗ tay cho bạn', sai:['Ghen tị với bạn','Không nói gì']},
+  {nhom:'Tư thế', emoji:'🧍', cau:'Đứng nghiêm, bé nên làm gì?', dung:'Đứng thẳng, tay xuôi', sai:['Đứng lom khom','Ngồi xuống đất']},
+  {nhom:'Tư thế', emoji:'🪑', cau:'Ngồi học, bé nên ngồi thế nào?', dung:'Ngồi thẳng lưng', sai:['Nằm ra bàn','Ngồi vẹo người']},
+  {nhom:'Rèn luyện', emoji:'💪', cau:'Tập thể dục mỗi ngày giúp bé làm gì?', dung:'Khỏe mạnh và nhanh nhẹn', sai:['Mệt và ốm','Không có tác dụng']},
+  {nhom:'Rèn luyện', emoji:'🌅', cau:'Buổi sáng, bé nên làm gì?', dung:'Tập vài động tác nhẹ', sai:['Nằm mãi trên giường','Chạy ngay không khởi động']},
+  {nhom:'Vệ sinh', emoji:'🧼', cau:'Sau giờ thể chất, bé nên làm gì?', dung:'Rửa tay, lau mồ hôi', sai:['Ăn luôn không rửa','Mặc nguyên áo ướt']},
+  {nhom:'Vệ sinh', emoji:'👕', cau:'Áo ướt mồ hôi sau khi vận động, bé nên làm gì?', dung:'Thay áo khô', sai:['Mặc tiếp áo ướt','Cởi áo ra ngoài']},
+  {nhom:'Nghe hiệu lệnh', emoji:'📣', cau:'Cô giáo thổi còi, bé nên làm gì?', dung:'Dừng lại và nghe cô dặn', sai:['Chạy tiếp không nghe','Hét to hơn còi'], },
+];
+MON_HOC.push({id:'thechat', ten:'Giáo dục thể chất', icon:'🏃', lop:'mon-toan', moTa:'Khởi động, vận động an toàn và bài đếm số lần vận động!'});
+GAME_THEO_MON.thechat = [
+  {id:'quiz', ten:'🏃 Trắc nghiệm Thể chất', moTa:'30 câu về khởi động, an toàn và chơi cùng đội.'},
+  {id:'vandong', ten:'💪 Bài vận động đếm số', moTa:'Làm theo từng động tác và bấm đếm mỗi lần làm xong.'},
+];
+THECHAT_Q.forEach(it => {
+  NGAN_HANG.push({mon:'thechat', game:'quiz', cau:it.cau, dapAn:it.dung, luaChon:tron([it.dung].concat(it.sai)), nhom:it.nhom, emoji:it.emoji});
+});
+let _vanDongDem = 0;
+function renderVanDong(){
+  _vanDongDem = 0;
+  const dongTac = ['🤸 Giơ hai tay lên cao', '🦵 Nhún gối 5 lần', '🚶 Đi bộ tại chỗ', '👏 Vỗ tay theo nhịp', '🧍 Đứng thẳng, hít thở sâu'];
+  document.getElementById('noiDungGame').innerHTML =
+    '<div class="khung-bai"><h2>💪 Bài vận động đếm số</h2><p class="mo-ta">Bé làm theo từng động tác (có người lớn bên cạnh), làm xong một động tác thì bấm “Bé làm xong 1 lần”.</p>'
+    + dongTac.map(d => '<p style="font-size:24px;background:#fffbe6;border-radius:16px;padding:12px">' + d + '</p>').join('')
+    + '<p style="font-size:28px">Tổng số lần bé đã làm: <b id="demVanDong">0</b></p>'
+    + '<div class="ke-trang"><button class="nut nut-xanh" onclick="_vanDongDem++;document.getElementById(\'demVanDong\').textContent=_vanDongDem;amClick()">➕ Bé làm xong 1 lần</button>'
+    + '<button class="nut nut-hong" onclick="hoanThanhVanDong()">✅ Hoàn thành vận động</button></div>'
+    + '<p style="color:#666;font-size:17px">Lưu ý: chỉ vận động nhẹ nhàng, dừng ngay nếu thấy mệt hoặc đau.</p></div>';
+  hienManHinh('manHinhGame');
+}
+function hoanThanhVanDong(){
+  if(_vanDongDem < 5){ toast('Bé làm thêm vài lần nữa nhé, cần ít nhất 5 lần!'); amSai(); return; }
+  amHoanThanh(); state.stars += 3; state.points += 20; luu(); kiemTraHuyHieu(); capNhatTieuDe();
+  toast('🎉 Tuyệt vời! Bé được +3 sao vì đã vận động xong!');
+  veTrangChu();
+}
+
+
+/* ===== data-tienganh.js (gộp bởi build.py) ===== */
+// ============================================================
+// MÔN TIẾNG ANH (Global Success lớp 1, từ vựng cơ bản)
+// - 30 câu đọc từ vựng: nhìn hình, chọn từ tiếng Anh đúng.
+// - 30 câu nghe: nghe từ tiếng Anh (giọng máy en-US, docEn) rồi
+//   chọn đúng hình + từ. Từ vựng cơ bản (màu, số, con vật,
+//   gia đình, cơ thể, đồ dùng học tập) là từ thông dụng, không
+//   chép bài đọc / lời thoại trong sách.
+// ============================================================
+const TIENGANH_TUVUNG = [
+  {emoji:'🔴', en:'red', vn:'màu đỏ'}, {emoji:'🔵', en:'blue', vn:'màu xanh dương'}, {emoji:'🟡', en:'yellow', vn:'màu vàng'},
+  {emoji:'🟢', en:'green', vn:'màu xanh lá'}, {emoji:'🟠', en:'orange', vn:'màu cam'}, {emoji:'🟣', en:'purple', vn:'màu tím'},
+  {emoji:'1️⃣', en:'one', vn:'số một'}, {emoji:'2️⃣', en:'two', vn:'số hai'}, {emoji:'3️⃣', en:'three', vn:'số ba'},
+  {emoji:'4️⃣', en:'four', vn:'số bốn'}, {emoji:'5️⃣', en:'five', vn:'số năm'}, {emoji:'6️⃣', en:'six', vn:'số sáu'},
+  {emoji:'🐱', en:'cat', vn:'con mèo'}, {emoji:'🐶', en:'dog', vn:'con chó'}, {emoji:'🐟', en:'fish', vn:'con cá'},
+  {emoji:'🐔', en:'chicken', vn:'con gà'}, {emoji:'🐦', en:'bird', vn:'con chim'}, {emoji:'🐷', en:'pig', vn:'con lợn'},
+  {emoji:'👩', en:'mother', vn:'mẹ'}, {emoji:'👨', en:'father', vn:'bố'}, {emoji:'👧', en:'girl', vn:'bé gái'},
+  {emoji:'👦', en:'boy', vn:'bé trai'}, {emoji:'👵', en:'grandmother', vn:'bà'}, {emoji:'👴', en:'grandfather', vn:'ông'},
+  {emoji:'📚', en:'book', vn:'quyển sách'}, {emoji:'✏️', en:'pencil', vn:'bút chì'}, {emoji:'🎒', en:'bag', vn:'cái cặp'},
+  {emoji:'✂️', en:'scissors', vn:'cái kéo'}, {emoji:'🪑', en:'chair', vn:'cái ghế'}, {emoji:'🍎', en:'apple', vn:'quả táo'},
+  {emoji:'👋', en:'hello', vn:'xin chào'}, {emoji:'🙏', en:'thank you', vn:'cảm ơn'}, {emoji:'👋', en:'goodbye', vn:'tạm biệt'},
+  {emoji:'🖐️', en:'hand', vn:'bàn tay'}, {emoji:'👁️', en:'eye', vn:'mắt'}, {emoji:'👂', en:'ear', vn:'tai'},
+  {emoji:'👃', en:'nose', vn:'mũi'}, {emoji:'🦶', en:'foot', vn:'bàn chân'}, {emoji:'😊', en:'happy', vn:'vui vẻ'},
+  {emoji:'☀️', en:'sun', vn:'mặt trời'}, {emoji:'🌙', en:'moon', vn:'mặt trăng'}, {emoji:'⭐', en:'star', vn:'ngôi sao'},
+  {emoji:'🏠', en:'house', vn:'ngôi nhà'}, {emoji:'🏫', en:'school', vn:'trường học'}, {emoji:'⚽', en:'ball', vn:'quả bóng'},
+  {emoji:'🍌', en:'banana', vn:'quả chuối'}, {emoji:'🥛', en:'milk', vn:'sữa'}, {emoji:'🍚', en:'rice', vn:'cơm'},
+  {emoji:'🚗', en:'car', vn:'ô tô'}, {emoji:'🚲', en:'bike', vn:'xe đạp'}, {emoji:'🌸', en:'flower', vn:'bông hoa'},
+  {emoji:'🐘', en:'elephant', vn:'con voi'}, {emoji:'🐵', en:'monkey', vn:'con khỉ'}, {emoji:'🦁', en:'lion', vn:'con sư tử'},
+  {emoji:'7️⃣', en:'seven', vn:'số bảy'}, {emoji:'8️⃣', en:'eight', vn:'số tám'}, {emoji:'9️⃣', en:'nine', vn:'số chín'},
+  {emoji:'🔟', en:'ten', vn:'số mười'}, {emoji:'🦆', en:'duck', vn:'con vịt'}, {emoji:'🖊️', en:'pen', vn:'bút mực'},
+];
+// Lưu ý: danh sách trên có 60 mục; 30 mục đầu làm bài đọc, 30 mục sau làm bài nghe.
+MON_HOC.push({id:'tienganh', ten:'Tiếng Anh', icon:'🔤', lop:'mon-viet', moTa:'Từ vựng cơ bản: màu sắc, số, con vật, gia đình và đồ dùng học tập!'});
+GAME_THEO_MON.tienganh = [
+  {id:'tuvung', ten:'🔤 Từ vựng tiếng Anh', moTa:'Nhìn hình, chọn từ tiếng Anh đúng.'},
+  {id:'nghe', ten:'🔊 Nghe và chọn hình', moTa:'Nghe từ tiếng Anh rồi chọn đúng hình.'},
+];
+TIENGANH_TUVUNG.slice(0, 30).forEach(it => {
+  const sai = tron(TIENGANH_TUVUNG.filter(x => x.en !== it.en).map(x => x.en)).slice(0, 3);
+  NGAN_HANG.push({mon:'tienganh', game:'tuvung', cau:'Từ tiếng Anh của hình trên là gì?', dapAn:it.en, luaChon:tron([it.en].concat(sai)), emoji:it.emoji, giai:it.en + ' nghĩa là ' + it.vn});
+});
+TIENGANH_TUVUNG.slice(30).forEach(it => {
+  const sai = TIENGANH_TUVUNG.filter(x => x.en !== it.en).map(x => x.emoji + ' ' + x.en);
+  const saiChon = tron(sai).slice(0, 3);
+  const dap = it.emoji + ' ' + it.en;
+  NGAN_HANG.push({mon:'tienganh', game:'nghe', cau:'Bé nghe từ tiếng Anh và chọn đúng hình nhé!', dapAn:dap, luaChon:tron([dap].concat(saiChon)), emoji:'🔊', docEn:it.en, giai:it.en + ' nghĩa là ' + it.vn});
+});
+
+
+/* ===== data-trainghiem.js (gộp bởi build.py) ===== */
+// ============================================================
+// MÔN HOẠT ĐỘNG TRẢI NGHIỆM - 30 câu trắc nghiệm + bảng việc tốt
+// Bảng việc tốt là danh sách bé tự đánh dấu đã làm trong ngày,
+// không chấm điểm đạo đức, chỉ khuyến khích thói quen tốt.
+// ============================================================
+const TRAINGHIEM_Q = [
+  {nhom:'Trường học', emoji:'🏫', cau:'Đến trường, bé nên làm gì đầu tiên?', dung:'Chào cô giáo và các bạn', sai:['Chạy vào lớp không chào','Ngồi một mình']},
+  {nhom:'Trường học', emoji:'🎒', cau:'Vào lớp, bé nên để cặp ở đâu?', dung:'Đúng chỗ quy định', sai:['Để giữa lối đi','Ném cặp xuống đất']},
+  {nhom:'Trường học', emoji:'🧹', cau:'Lớp học gọn gàng nhờ ai?', dung:'Cả lớp cùng giữ gìn', sai:['Chỉ cô giáo dọn','Một bạn dọn']},
+  {nhom:'Bạn bè', emoji:'👫', cau:'Bạn mới chưa quen, bé nên làm gì?', dung:'Làm quen và giúp bạn', sai:['Trêu bạn','Không nói chuyện']},
+  {nhom:'Bạn bè', emoji:'🎁', cau:'Sinh nhật bạn, bé nên làm gì?', dung:'Chúc mừng bạn', sai:['Ghen tị với bạn','Không quan tâm']},
+  {nhom:'Bạn bè', emoji:'🤝', cau:'Bạn và bé bất đồng, bé nên làm gì?', dung:'Nói nhẹ nhàng và nhường nhau', sai:['Đánh nhau','Không chơi nữa']},
+  {nhom:'Gia đình', emoji:'🏠', cau:'Cuối tuần ở nhà, bé có thể giúp gì?', dung:'Dọn đồ chơi, tưới cây', sai:['Chơi cả ngày không làm gì','Quấy khóc']},
+  {nhom:'Gia đình', emoji:'🍚', cau:'Bé giúp mẹ dọn bàn ăn, đó là gì?', dung:'Việc tốt trong gia đình', sai:['Việc không cần làm','Việc của mẹ']},
+  {nhom:'Gia đình', emoji:'👵', cau:'Thăm ông bà, bé nên làm gì?', dung:'Chào hỏi và kể chuyện trường', sai:['Chạy nhảy ầm ĩ','Đòi quà ngay']},
+  {nhom:'Thiên nhiên', emoji:'🌱', cau:'Trồng cây trong trường, bé nên làm gì?', dung:'Tưới nước và chăm cây', sai:['Nhổ cây lên xem','Bẻ lá chơi']},
+  {nhom:'Thiên nhiên', emoji:'🌧️', cau:'Trời mưa, bé đi tham quan cần gì?', dung:'Áo mưa và đi cùng người lớn', sai:['Đi một mình không áo mưa','Chạy dưới mưa']},
+  {nhom:'Thiên nhiên', emoji:'🐦', cau:'Đi dã ngoại, bé thấy chim, bé nên làm gì?', dung:'Ngắm chim từ xa', sai:['Bắt chim về','Ném đá vào chim']},
+  {nhom:'An toàn', emoji:'🚸', cau:'Đi tham quan cùng lớp, bé nên làm gì?', dung:'Đi theo hàng, nghe cô dặn', sai:['Chạy tách khỏi lớp','Đi một mình']},
+  {nhom:'An toàn', emoji:'🚌', cau:'Lên xe đi tham quan, bé nên làm gì?', dung:'Ngồi ngay ngắn, thắt dây an toàn', sai:['Đứng lên xe','Thò đầu ra cửa']},
+  {nhom:'An toàn', emoji:'🗺️', cau:'Bé bị lạc khỏi lớp khi tham quan, bé nên làm gì?', dung:'Đứng yên và gọi cô giáo', sai:['Chạy tìm lung tung','Đi theo người lạ']},
+  {nhom:'Vệ sinh', emoji:'🗑️', cau:'Ăn quà khi tham quan, vỏ bánh bé bỏ đâu?', dung:'Thùng rác', sai:['Vứt xuống đất','Giấu vào túi']},
+  {nhom:'Vệ sinh', emoji:'🚰', cau:'Sau khi chơi ngoài sân, bé nên làm gì?', dung:'Rửa tay sạch', sai:['Ăn luôn không rửa','Lau tay vào áo']},
+  {nhom:'Kỹ năng', emoji:'🗣️', cau:'Muốn phát biểu, bé nên làm gì?', dung:'Giơ tay xin phép', sai:['Hét to','Nói chen ngang']},
+  {nhom:'Kỹ năng', emoji:'👂', cau:'Bạn đang nói, bé nên làm gì?', dung:'Lắng nghe bạn nói hết', sai:['Ngắt lời bạn','Quay đi chỗ khác']},
+  {nhom:'Kỹ năng', emoji:'📖', cau:'Kể chuyện trước lớp, bé nên làm gì?', dung:'Nói to, rõ ràng', sai:['Nói nhỏ không ai nghe','Không dám nói']},
+  {nhom:'Kỹ năng', emoji:'🧩', cau:'Chơi trò chơi nhóm, bé nên làm gì?', dung:'Chơi cùng nhóm, tuân thủ luật', sai:['Chơi một mình','Phá luật']},
+  {nhom:'Kỹ năng', emoji:'🎨', cau:'Làm sản phẩm thủ công, bé nên làm gì?', dung:'Làm cẩn thận và giữ gìn', sai:['Làm ẩu cho xong','Vứt sản phẩm đi']},
+  {nhom:'Tình cảm', emoji:'😊', cau:'Bé vui, bé có thể làm gì?', dung:'Chia sẻ niềm vui với bạn', sai:['Giữ niềm vui một mình','Trêu bạn buồn']},
+  {nhom:'Tình cảm', emoji:'😢', cau:'Bạn buồn, bé nên làm gì?', dung:'An ủi và chơi cùng bạn', sai:['Cười bạn buồn','Bỏ bạn một mình']},
+  {nhom:'Tình cảm', emoji:'😡', cau:'Bé tức giận, bé nên làm gì?', dung:'Hít thở sâu và nói nhẹ nhàng', sai:['Đánh bạn','Hét to']},
+  {nhom:'Cộng đồng', emoji:'🏘️', cau:'Sống trong khu phố, bé nên làm gì?', dung:'Chào hỏi hàng xóm lễ phép', sai:['Hét to trong khu phố','Vứt rác ra đường']},
+  {nhom:'Cộng đồng', emoji:'🌳', cau:'Công viên gần nhà, bé nên làm gì?', dung:'Giữ gìn sạch sẽ', sai:['Vẽ bậy lên ghế','Bẻ cây']},
+  {nhom:'Cộng đồng', emoji:'🚑', cau:'Thấy xe cứu thương, bé nên làm gì?', dung:'Tránh đường cho xe đi', sai:['Chặn đường xe','Chạy theo xe']},
+  {nhom:'Tự phục vụ', emoji:'👕', cau:'Buổi sáng đi học, bé nên làm gì?', dung:'Tự mặc quần áo gọn gàng', sai:['Để bố mẹ mặc hộ mọi thứ','Mặc áo ngược']},
+  {nhom:'Tự phục vụ', emoji:'🥣', cau:'Ăn sáng xong, bé nên làm gì?', dung:'Dọn bát của mình', sai:['Để bát lung tung','Chạy đi chơi ngay']},
+];
+MON_HOC.push({id:'trainghiem', ten:'Hoạt động trải nghiệm', icon:'🌟', lop:'mon-song', moTa:'Trường học, bạn bè, gia đình và bảng việc tốt mỗi ngày!'});
+GAME_THEO_MON.trainghiem = [
+  {id:'quiz', ten:'🌟 Trắc nghiệm Trải nghiệm', moTa:'30 câu về trường học, bạn bè và cộng đồng.'},
+  {id:'checklist', ten:'✅ Bảng việc tốt hôm nay', moTa:'Đánh dấu những việc tốt bé đã làm trong ngày.'},
+];
+TRAINGHIEM_Q.forEach(it => {
+  NGAN_HANG.push({mon:'trainghiem', game:'quiz', cau:it.cau, dapAn:it.dung, luaChon:tron([it.dung].concat(it.sai)), nhom:it.nhom, emoji:it.emoji});
+});
+function renderChecklist(){
+  const viec = ['Chào bố mẹ, cô giáo lễ phép', 'Dọn đồ chơi gọn gàng', 'Tưới cây hoặc chăm cây', 'Giúp bố mẹ một việc nhỏ', 'Đọc sách hoặc tập đọc', 'Nhặt rác bỏ vào thùng rác'];
+  document.getElementById('noiDungGame').innerHTML =
+    '<div class="khung-bai"><h2>✅ Bảng việc tốt hôm nay</h2><p class="mo-ta">Bé đánh dấu những việc bé đã làm thật trong ngày hôm nay nhé!</p>'
+    + viec.map((v,i) => '<label style="display:block;text-align:left;font-size:22px;background:#fffbe6;border-radius:14px;padding:12px;margin:10px 0"><input type="checkbox" class="viec-tot" style="width:24px;height:24px"> ' + v + '</label>').join('')
+    + '<button class="nut nut-hong" onclick="hoanThanhChecklist()">✅ Bé đã làm xong! Nhận sao</button></div>';
+  hienManHinh('manHinhGame');
+}
+function hoanThanhChecklist(){
+  const dem = document.querySelectorAll('.viec-tot:checked').length;
+  if(dem === 0){ toast('Bé đánh dấu ít nhất 1 việc đã làm nhé!'); amSai(); return; }
+  const sao = Math.min(dem, 5);
+  amHoanThanh(); state.stars += sao; state.points += sao * 10; luu(); kiemTraHuyHieu(); capNhatTieuDe();
+  toast('🎉 Tuyệt vời! Bé được +' + sao + ' sao vì đã làm ' + dem + ' việc tốt!');
+  veTrangChu();
+}
+
+function hienManHinh(id){
+  ['manHinhChinh','manHinhGame','manHinhPhuHuynh'].forEach(x=>{
+    document.getElementById(x).style.display = (x===id) ? 'block' : 'none';
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function veTrangChu(){ renderDashboard(); hienManHinh('manHinhChinh'); }
+function renderDashboard(){
+  document.getElementById('luoiMon').innerHTML = MON_HOC.map(m=>{
+    const tat = state.tatMon.includes(m.id);
+    return '<div class="the-mon '+m.lop+(tat?' tat':'')+'" onclick="moMon(\''+m.id+'\')">'
+      + '<span class="icon">'+m.icon+'</span><h3>'+m.ten+'</h3><p>'+(tat?'Phụ huynh đã tạm tắt môn này':m.moTa)+'</p></div>';
+  }).join('');
+  capNhatTieuDe();
+  const ct = document.getElementById('chipThuVien');
+  if(ct) ct.textContent = '📚 Thư viện: ' + NGAN_HANG.length.toLocaleString('vi-VN') + ' câu hỏi';
+  const ctd = document.getElementById('chipThuVienChiTiet');
+  if(ctd) ctd.textContent = MON_HOC.map(m => m.ten + ' ' + NGAN_HANG.filter(q => q.mon === m.id).length).join(' • ');
+}
+function moMon(monId){
+  if(state.tatMon.includes(monId)){ toast('Môn này đang được phụ huynh tạm tắt.'); return; }
+  amClick();
+  const mon = MON_HOC.find(m=>m.id===monId);
+  document.getElementById('noiDungGame').innerHTML =
+    '<div class="khung-bai"><h2 style="margin-top:0">'+mon.icon+' '+mon.ten+'</h2><p class="mo-ta">'+mon.moTa+'</p>'
+    + '<div class="luoi-game">' + GAME_THEO_MON[monId].map(g=>{
+      const so = demTheo(monId, g.id);
+      const them = so ? ' • Ngân hàng: ' + so + ' câu' : ' • Bài học tương tác';
+      return '<div class="the-game" onclick="batDauGame(\''+monId+'\',\''+g.id+'\')"><b>'+g.ten+'</b><span>'+g.moTa+them+'</span></div>';
+    }).join('') + '</div></div>';
+  hienManHinh('manHinhGame');
+}
+
+/* ============================================================
+   PHẦN G. MÁY CHẠY TRÒ CHƠI TRẮC NGHIỆM (dùng chung)
+   - current: bài đang chơi (môn, mã game, danh sách câu hỏi)
+   - Mỗi câu đúng: +10 điểm, +1 sao, cập nhật per[mon]
+   - Hết bài: thưởng thêm 5 sao nếu đạt >= 80%, mở 1 hình dán
+   ============================================================ */
+let current = null;
+function batDauGame(monId, gameId){
+  amClick();
+  if(monId==='viet' && gameId==='chu') return renderChuCai();
+  if(monId==='viet' && gameId==='ghep') return renderGhepVan();
+  if(monId==='viet' && gameId==='doc') return renderTapDoc();
+  if(gameId==='notnhac' && typeof renderNotNhac === 'function') return renderNotNhac();
+  if(gameId==='ve' && typeof renderVe === 'function') return renderVe();
+  if(gameId==='vandong' && typeof renderVanDong === 'function') return renderVanDong();
+  if(gameId==='checklist' && typeof renderChecklist === 'function') return renderChecklist();
+  /* MỚI: lấy câu từ ngân hàng 1000 câu, xáo trộn rồi lấy 8-10 câu mỗi lượt.
+     Nhờ vậy đáp án đã được xáo trộn sẵn trong ngân hàng, không còn lỗi
+     đáp án đúng luôn ở vị trí đầu tiên như bản cũ ở môn Cuộc sống. */
+  const soCau = (gameId==='nhan' || gameId==='tu' || gameId==='chinh' || gameId==='dem') ? 8 : 10;
+  const cauHoi = tron(NGAN_HANG.filter(q => q.mon===monId && q.game===gameId)).slice(0, soCau)
+    .map(q => ({cau: q.cau, luaChon: q.luaChon, dapAn: q.dapAn, emoji: q.emoji, nhom: q.nhom, giai: q.giai, doc: q.doc}));
+  if(cauHoi.length===0){ toast('Bài này chưa có câu hỏi.'); return; }
+  current = {mon:monId, game:gameId, cauHoi, viTri:0, dung:0};
+  renderCauHoi();
+}
+
+function renderCauHoi(){
+  const q = current.cauHoi[current.viTri];
+  const tenMon = MON_HOC.find(m=>m.id===current.mon).ten;
+  document.getElementById('noiDungGame').innerHTML =
+    '<div class="khung-bai"><p style="margin:0; color:#888">📚 '+tenMon+' - Câu '+ (current.viTri+1) +' / '+current.cauHoi.length+'</p>'
+    + '<div class="thanh-tien-do"><i style="width:'+(current.viTri/current.cauHoi.length*100)+'%"></i></div>'
+    + (q.nhom ? '<p style="margin:0"><span class="chip">🏷️ '+q.nhom+'</span></p>' : '')
+    + (q.emoji ? '<div class="emoji-lon">'+q.emoji+'</div>' : '')
+    + '<div class="cau-hoi">'+q.cau+'</div>'
+    + '<div class="luoi-dap-an">' + q.luaChon.map((da,i)=>
+        '<button class="dap-an" onclick="chonDapAn(this,'+i+')">'+da+'</button>').join('') + '</div>'
+    + '<div class="phan-hoi" id="phanHoi"></div>'
+    + '<div class="ke-trang"><button class="nut nut-xanh" id="nutTiep" style="display:none" onclick="cauTiepTheo()">Câu tiếp theo ➡️</button></div></div>';
+  if(q.doc) docTiengViet('Bé hãy chọn chữ ' + q.doc);
+  if(q.docEn){ try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(q.docEn); u.lang='en-US'; u.rate=0.9; speechSynthesis.speak(u); }catch(e){} }
+  hienManHinh('manHinhGame');
+}
+function chonDapAn(nut, chiSo){
+  const q = current.cauHoi[current.viTri];
+  const dung = (q.luaChon[chiSo] === q.dapAn);
+  document.querySelectorAll('.dap-an').forEach(b=>b.disabled=true);
+  if(!state.per[current.mon]) state.per[current.mon]={c:0,t:0};
+  state.total++; state.per[current.mon].t++;
+  if(dung){
+    nut.classList.add('dung'); amDung();
+    current.dung++; // đếm số câu đúng của riêng bài đang chơi
+    state.correct++; state.per[current.mon].c++; state.points+=10; state.stars+=1;
+    document.getElementById('phanHoi').textContent = '🎉 Đúng rồi! Bé giỏi quá! +1 sao vàng, +10 điểm';
+    if(q.giai) document.getElementById('phanHoi').textContent += ' - ' + q.giai;
+  } else {
+    nut.classList.add('sai'); amSai();
+    document.querySelectorAll('.dap-an').forEach(b=>{ if(b.textContent==String(q.dapAn)) b.classList.add('dung'); });
+    document.getElementById('phanHoi').textContent = '💪 Chưa đúng rồi, đáp án đúng là: ' + q.dapAn + (q.giai ? ' - ' + q.giai : '') + '. Bé thử lại câu sau nhé!';
+  }
+  luu(); kiemTraHuyHieu(); capNhatTieuDe();
+  document.getElementById('nutTiep').style.display='inline-block';
+}
+function cauTiepTheo(){
+  amClick(); current.viTri++;
+  if(current.viTri < current.cauHoi.length) renderCauHoi();
+  else ketThucGame();
+}
+function ketThucGame(){
+  amHoanThanh();
+  const tong = current.cauHoi.length, dung = current.dung || 0;
+  const tyLe = tong ? Math.round(dung/tong*100) : 0;
+  // Thưởng hoàn thành: đạt từ 80% trở lên được +5 sao, còn lại +2 sao động viên
+  const thuong = (tyLe >= 80) ? 5 : 2;
+  state.stars += thuong;
+  let stickerMoi = '';
+  const chuaCo = DS_STICKER.filter(s=>!state.stickers.includes(s));
+  if(chuaCo.length){ stickerMoi = chuaCo[soNgauNhien(0,chuaCo.length-1)]; state.stickers.push(stickerMoi); }
+  const tenGame = (GAME_THEO_MON[current.mon]||[]).find(g=>g.id===current.game);
+  state.history.unshift({ngay:new Date().toLocaleString('vi-VN'), mon:MON_HOC.find(m=>m.id===current.mon).ten, bai:tenGame?tenGame.ten:'Bài chơi', tong: tong});
+  state.history = state.history.slice(0,30);
+  luu(); kiemTraHuyHieu(); capNhatTieuDe();
+  document.getElementById('noiDungGame').innerHTML =
+    '<div class="khung-bai"><div class="emoji-lon">🎉🏆🎉</div><h2>Hoàn thành bài rồi!</h2>'
+    + '<p style="font-size:22px">Bé trả lời đúng <b>'+dung+' / '+tong+' câu</b> ('+tyLe+'%). Bé được thưởng thêm <b>+'+thuong+' sao</b> vì đã cố gắng đến cuối!</p>'
+    + (stickerMoi ? '<p style="font-size:24px">🎁 Bé mở được hình dán mới: <span style="font-size:52px">'+stickerMoi+'</span></p>' : '<p>🎁 Bé đã sưu tập đủ hình dán trong đợt này rồi!</p>')
+    + '<div class="ke-trang"><button class="nut nut-hong" onclick="batDauGame(\''+current.mon+'\',\''+current.game+'\')">🔄 Chơi lại bài này</button>'
+    + '<button class="nut nut-xanh" onclick="moMon(\''+current.mon+'\')">📚 Chọn bài khác</button></div></div>';
+}
+</script>
+<script>
+/* ============================================================
+   PHẦN H. CÁC BÀI HỌC ĐẶC BIỆT (không phải trắc nghiệm)
+   1) Học chữ cái: chạm chữ -> chữ to + ví dụ + đọc mẫu
+   2) Ghép âm: chọn phụ âm + nguyên âm -> tiếng + nghĩa
+   3) Tập đọc: từng câu có nút nghe, nút "Bé đọc xong" + sao
+   ============================================================ */
+function renderChuCai(){
+  document.getElementById('noiDungGame').innerHTML =
+    '<div class="khung-bai"><h2>🔤 Học chữ cái</h2><p class="mo-ta">Chạm vào một chữ cái để nghe cô đọc và xem ví dụ nhé!</p>'
+    + '<div>' + CHU_CAI.map(c=>'<span class="chu-cai" onclick="xemChu(\''+c+'\')">'+c+'</span>').join('') + '</div>'
+    + '<div id="xemChuChiTiet" style="margin-top:20px"><p style="color:#888">Bé chạm vào chữ cái ở trên nào!</p></div></div>';
+  hienManHinh('manHinhGame');
+}
+function xemChu(c){
+  amClick(); docTiengViet(c);
+  document.getElementById('xemChuChiTiet').innerHTML =
+    '<div class="chu-lon">'+c+'</div><p style="font-size:24px">Ví dụ: <b>'+VI_DU_CHU[c]+'</b></p>'
+    + '<button class="nut nut-vang" onclick="docTiengViet(\''+VI_DU_CHU[c]+'\')">🔊 Nghe ví dụ</button>';
+}
+let chonOn = 'b', chonAm = 'a';
+function renderGhepVan(){
+  const phuAm = ['b','c','d','đ','g','h','k','l','m','n','t'];
+  const nguyenAm = ['a','ă','â','e','ê','i','o','ô','ơ','u','ư'];
+  document.getElementById('noiDungGame').innerHTML =
+    '<div class="khung-bai"><h2>🧩 Ghép âm thành tiếng</h2><p class="mo-ta">Bước 1: chọn phụ âm. Bước 2: chọn nguyên âm. Bước 3: bấm “Ghép thử”!</p>'
+    + '<p><b>Phụ âm:</b></p><div>' + phuAm.map(c=>'<span class="chu-cai" onclick="chonOn=\''+c+'\'; renderGhepVan(); amClick()">'+c+'</span>').join('') + '</div>'
+    + '<p><b>Nguyên âm:</b></p><div>' + nguyenAm.map(c=>'<span class="chu-cai" onclick="chonAm=\''+c+'\'; renderGhepVan(); amClick()">'+c+'</span>').join('') + '</div>'
+    + '<p style="font-size:24px">Bé đã chọn: <b style="color:#ff5d8f">'+chonOn+' + '+chonAm+'</b></p>'
+    + '<button class="nut nut-hong" onclick="ghepThu()">✨ Ghép thử</button><div id="ketQuaGhep" style="margin-top:16px"></div></div>';
+  hienManHinh('manHinhGame');
+}
+function ghepThu(){
+  const tu = chonOn + chonAm;
+  const tim = GHEP_VAN.find(g=>g.tu===tu);
+  const el = document.getElementById('ketQuaGhep');
+  if(tim){
+    amDung(); docTiengViet(tim.tu);
+    state.stars+=1; state.points+=10; luu(); kiemTraHuyHieu(); capNhatTieuDe();
+    el.innerHTML = '<p style="font-size:30px">🎉 <b>'+chonOn+' + '+chonAm+' = '+tim.tu+'</b></p><p>'+tim.nghia+'. Bé được +1 sao!</p>';
+  } else {
+    amClick(); docTiengViet(tu);
+    el.innerHTML = '<p style="font-size:30px">👏 <b>'+chonOn+' + '+chonAm+' = '+tu+'</b></p><p>Bé đã ghép được một tiếng mới! Hãy thử ghép “ba”, “me”, “ca” xem có nghĩa gì nhé!</p>';
+  }
+}
+function renderTapDoc(){
+  document.getElementById('noiDungGame').innerHTML =
+    '<div class="khung-bai"><h2>📖 Tập đọc</h2><p class="mo-ta">Bấm 🔊 để nghe đọc mẫu, sau đó bé đọc to thành tiếng theo nhé!</p>'
+    + TAP_DOC.map((cau,i)=>'<div style="background:#fffbe6; border-radius:16px; padding:14px; margin:10px 0; font-size:26px">'
+      + cau + ' <button class="nut nut-nho nut-vang" onclick="docTiengViet(\''+cau+'\')">🔊 Nghe</button></div>').join('')
+    + '<button class="nut nut-hong" onclick="hoanThanhDoc()">✅ Bé đã đọc xong tất cả! Nhận sao</button></div>';
+  hienManHinh('manHinhGame');
+}
+function hoanThanhDoc(){
+  amHoanThanh(); state.stars+=3; state.points+=20; luu(); kiemTraHuyHieu(); capNhatTieuDe();
+  toast('🎉 Tuyệt vời! Bé được +3 sao vì đã tập đọc xong!');
+  veTrangChu();
+}
+
+/* ============================================================
+   PHẦN I. CHẾ ĐỘ PHỤ HUYNH
+   - Thống kê đúng/tổng theo môn, lịch sử 30 lần chơi gần nhất
+   - Tắt/mở môn học; đặt lại tiến độ (có xác nhận)
+   ============================================================ */
+function moPhuHuynh(){
+  amClick();
+  const baoCao = MON_HOC.map(m=>{
+    const p = state.per[m.id] || {c:0,t:0};
+    const tl = p.t ? Math.round(p.c/p.t*100) : 0;
+    return '<tr><td>'+m.icon+' '+m.ten+'</td><td>'+p.c+' / '+p.t+' câu đúng</td><td>'+tl+'%</td></tr>';
+  }).join('');
+  document.getElementById('baoCaoPhuHuynh').innerHTML =
+    '<p>⭐ Tổng sao: <b>'+state.stars+'</b> &nbsp;|&nbsp; 🏆 Điểm: <b>'+state.points+'</b> &nbsp;|&nbsp; 🎁 Hình dán: <b>'+state.stickers.length+'</b> &nbsp;|&nbsp; 🏅 Huy hiệu: <b>'+state.badges.length+'</b></p>'
+    + '<p>📚 Thư viện hiện có: <b>'+NGAN_HANG.length+' câu</b> (Tiếng Việt '+NGAN_HANG.filter(q=>q.mon==='viet').length+', Toán '+NGAN_HANG.filter(q=>q.mon==='toan').length+', Cuộc sống '+NGAN_HANG.filter(q=>q.mon==='life').length+'). Số này do chính code đếm, không phải con số ghi tay.</p>'
+    + '<table class="bang"><tr><th>Môn học</th><th>Kết quả</th><th>Tỉ lệ đúng</th></tr>'+baoCao+'</table>';
+  document.getElementById('chonMonPhuHuynh').innerHTML = MON_HOC.map(m=>{
+    const tat = state.tatMon.includes(m.id);
+    return '<label style="display:block; margin:8px 0; font-size:20px"><input type="checkbox" style="width:22px; height:22px" '+(tat?'':'checked')
+      + ' onchange="doiMonPhuHuynh(\''+m.id+'\', this.checked)"> '+m.icon+' '+m.ten+(tat?' (đang tắt)':'')+'</label>';
+  }).join('');
+  document.getElementById('lichSuPhuHuynh').innerHTML = state.history.length
+    ? '<table class="bang"><tr><th>Thời gian</th><th>Môn</th><th>Bài</th><th>Số câu</th></tr>'
+      + state.history.map(h=>'<tr><td>'+h.ngay+'</td><td>'+h.mon+'</td><td>'+h.bai+'</td><td>'+h.tong+'</td></tr>').join('') + '</table>'
+    : '<p style="color:#888">Chưa có lịch sử. Bé chơi xong một bài, lịch sử sẽ hiện ở đây.</p>';
+  hienManHinh('manHinhPhuHuynh');
+}
+function doiMonPhuHuynh(monId, choPhep){
+  if(choPhep) state.tatMon = state.tatMon.filter(x=>x!==monId);
+  else if(!state.tatMon.includes(monId)) state.tatMon.push(monId);
+  luu(); moPhuHuynh();
+}
+function datLaiTienDo(){
+  if(!confirm('Phụ huynh có chắc muốn xóa toàn bộ sao, điểm, huy hiệu và lịch sử của bé không?')) return;
+  localStorage.removeItem(KHOA_LUU);
+  state = { stars:0, points:0, correct:0, total:0, stickers:[], badges:[], history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}}, tatMon:[] };
+  luu(); veTrangChu(); toast('Đã đặt lại tiến độ.');
+}
+
+/* ============================================================
+   PHẦN J. KHỞI ĐỘNG ỨNG DỤNG
+   ============================================================ */
+renderDashboard();
+</script>
+</body>
+</html>
