@@ -277,13 +277,14 @@ function vietHoaCauHoi(text){
   s = s.replace(/&amp;/g, ' và ');
   s = s.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, ' ');
   s = s.replace(/\s*=\s*\?/g, ' bằng bao nhiêu');
-  s = s.replace(/\s*\?\s*/g, ' lớn hơn, bé hơn hay bằng ');
+  s = s.replace(/(\d+)\s*\?\s*(\d+)/g, '$1 lớn hơn, bé hơn hay bằng $2');
+  s = s.replace(/\?/g, ' ');
   s = s.replace(/\s*\+\s*/g, ' cộng ');
   s = s.replace(/\s*-\s*/g, ' trừ ');
   s = s.replace(/>/g, ' lớn hơn ');
   s = s.replace(/</g, ' bé hơn ');
   s = s.replace(/=/g, ' bằng ');
-  s = s.replace(/_/g, ' chữ còn thiếu ');
+  s = s.replace(/_/g, ' ');
   s = s.replace(/\s+/g, ' ').trim();
   return s;
 }
@@ -322,11 +323,22 @@ function speakEn(text, huy){
     speechSynthesis.speak(u);
   }catch(e){}
 }
+let _docToken = 0;
 function docCauHoiHienTai(){
+  _docToken++; const token = _docToken;
   if(!current) return;
   const q = current.cauHoi[current.viTri]; if(!q) return;
-  if(q.doc) docTiengViet('Bé hãy chọn chữ ' + q.doc);
-  else if(q.docEn) speakEn(q.docEn);
+  if(q.docEn && current.game === 'nghe'){
+    docTiengViet(q.cau);
+    setTimeout(function(){ if(token !== _docToken) return; speakEn(q.docEn, false); }, 1600);
+    return;
+  }
+  if(q.docEn){ speakEn(q.docEn); return; }
+  if(current.game === 'ghepquiz'){
+    const m = String(q.cau).match(/^(.+?)\s*\+\s*(.+?)\s*=/);
+    if(m){ docTiengViet(m[1] + ' ghép với ' + m[2] + ' được tiếng gì'); return; }
+  }
+  if(q.doc && String(q.cau).indexOf(q.doc) < 0) docTiengViet('Bé hãy chọn chữ ' + q.doc);
   else docTiengViet(q.cau);
 }
 function docDapAn(i){
@@ -346,8 +358,9 @@ function docPhanHoi(q, dung){
   if(current && current.mon === 'tienganh'){
     let word = String(q.dapAn);
     if(current.game === 'nghe') word = word.replace(/^\S+\s+/, '');
-    if(dung){ docTiengViet('Đúng rồi! Bé giỏi quá!'); setTimeout(function(){ speakEn(word, false); }, 1100); }
-    else { docTiengViet('Chưa đúng rồi.'); setTimeout(function(){ speakEn(word, false); }, 1100); }
+    const token = _docToken;
+    if(dung){ docTiengViet('Đúng rồi! Bé giỏi quá!'); setTimeout(function(){ if(token !== _docToken) return; speakEn(word, false); }, 1100); }
+    else { docTiengViet('Chưa đúng rồi.'); setTimeout(function(){ if(token !== _docToken) return; speakEn(word, false); }, 1100); }
     return;
   }
   if(dung) docTiengViet('Đúng rồi! Bé giỏi quá!');
@@ -855,7 +868,7 @@ function chonDapAn(nut, chiSo){
   document.getElementById('nutTiep').style.display='inline-block';
 }
 function cauTiepTheo(){
-  amClick(); current.viTri++;
+  amClick(); _docToken++; try{ speechSynthesis.cancel(); }catch(e){} current.viTri++;
   if(current.viTri < current.cauHoi.length) renderCauHoi();
   else ketThucGame();
 }

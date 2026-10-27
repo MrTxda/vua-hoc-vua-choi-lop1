@@ -38,7 +38,7 @@ let _bongDem = 0;
 function renderMiniBong(){
   _bongDem = 0;
   document.getElementById('noiDungGame').innerHTML =
-    '<div class="khung-bai"><h2>🎈 Bắt bóng bay</h2><p class="mo-ta">Bấm vào quả bóng để làm vỡ nó. Vỡ đủ 10 quả là thắng!</p>'
+    '<div class="khung-bai"><h2>🎈 Bắt bóng bay</h2><p class="mo-ta">Bấm vào quả bóng để làm vỡ nó. Vỡ đủ 10 quả là thắng!</p><button class="nut nut-vang nut-nho" onclick="docTiengViet(\'Bấm vào quả bóng để làm vỡ nó. Vỡ đủ 10 quả là thắng!\')">🔊 Nghe hướng dẫn</button>'
     + '<p style="font-size:26px">Đã vỡ: <b id="demBong">0</b> / 10 quả</p>'
     + '<div id="sanBong" style="position:relative; height:300px; background:#e0f7f5; border-radius:20px; overflow:hidden"></div>'
     + '<div class="ke-trang"><button class="nut nut-hong" id="nutXongBong" onclick="thuogMiniGameBong()">✅ Bé bắt xong! Nhận sao</button></div></div>';
@@ -65,7 +65,7 @@ function renderMiniLatThe(){
   _latThe = tron(cap.concat(cap));
   _latDangMo = []; _latCapDung = 0; _latKhoa = false;
   document.getElementById('noiDungGame').innerHTML =
-    '<div class="khung-bai"><h2>🃏 Lật thẻ trí nhớ</h2><p class="mo-ta">Bấm vào 2 thẻ. Nếu 2 thẻ giống nhau thì giữ lại, khác nhau thì úp lại nhé!</p>'
+    '<div class="khung-bai"><h2>🃏 Lật thẻ trí nhớ</h2><p class="mo-ta">Bấm vào 2 thẻ. Nếu 2 thẻ giống nhau thì giữ lại, khác nhau thì úp lại nhé!</p><button class="nut nut-vang nut-nho" onclick="docTiengViet(\'Bấm vào 2 thẻ. Nếu 2 thẻ giống nhau thì giữ lại, khác nhau thì úp lại nhé!\')">🔊 Nghe hướng dẫn</button>'
     + '<p style="font-size:22px">Đã tìm đúng: <b id="demCap">0</b> / 4 cặp</p>'
     + '<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; max-width:480px; margin:0 auto">' + _latThe.map((c,i) =>
         '<button class="dap-an" id="the-' + i + '" onclick="latThe(' + i + ')">❓</button>').join('') + '</div>'
@@ -109,7 +109,7 @@ function veVongTimSao(){
   const cacSao = [];
   for(let i = 0; i < 9; i++) cacSao.push(i === viTriKhac ? '🌟' : '⭐');
   document.getElementById('noiDungGame').innerHTML =
-    '<div class="khung-bai"><h2>⭐ Tìm sao khác biệt</h2><p class="mo-ta">Trong 9 ngôi sao, có 1 ngôi sao khác biệt. Bé tìm và bấm vào nó nhé!</p>'
+    '<div class="khung-bai"><h2>⭐ Tìm sao khác biệt</h2><p class="mo-ta">Trong 9 ngôi sao, có 1 ngôi sao khác biệt. Bé tìm và bấm vào nó nhé!</p><button class="nut nut-vang nut-nho" onclick="docTiengViet(\'Trong 9 ngôi sao, có 1 ngôi sao khác biệt. Bé tìm và bấm vào nó nhé!\')">🔊 Nghe hướng dẫn</button>'
     + '<p style="font-size:22px">Vòng: <b>' + (_timSaoVong + 1) + '</b> / 3</p>'
     + '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:420px; margin:0 auto">' + cacSao.map((c,i) =>
         '<button class="dap-an" onclick="chonSao(' + i + ',' + viTriKhac + ')">' + c + '</button>').join('') + '</div>'

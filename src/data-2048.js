@@ -94,6 +94,7 @@ function render2048(){
   document.getElementById('noiDungGame').innerHTML =
     '<div class="khung-bai"><h2>🔢 Trò chơi 2048</h2>'
     + '<p class="mo-ta">Trượt các ô giống nhau để gộp lại: 2 + 2 = 4, 4 + 4 = 8... Bé ghép đến <b>128 là thắng</b> nhé!</p>'
+    + '<button class="nut nut-vang nut-nho" onclick="docTiengViet(\'Trượt các ô giống nhau để gộp lại. Bé ghép đến 128 là thắng nhé!\')">🔊 Nghe hướng dẫn</button>'
     + '<p style="font-size:22px">Điểm: <b id="diem2048">0</b> &nbsp;|&nbsp; Điểm cao nhất: <b id="best2048">' + _2048Best() + '</b></p>'
     + '<div id="thongBao2048" style="font-size:21px; font-weight:bold; min-height:30px"></div>'
     + '<div id="bang2048" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-width:380px; margin:14px auto; background:#d9c7a5; padding:10px; border-radius:18px; touch-action:none"></div>'

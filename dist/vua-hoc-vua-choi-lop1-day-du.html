@@ -277,13 +277,14 @@ function vietHoaCauHoi(text){
   s = s.replace(/&amp;/g, ' và ');
   s = s.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, ' ');
   s = s.replace(/\s*=\s*\?/g, ' bằng bao nhiêu');
-  s = s.replace(/\s*\?\s*/g, ' lớn hơn, bé hơn hay bằng ');
+  s = s.replace(/(\d+)\s*\?\s*(\d+)/g, '$1 lớn hơn, bé hơn hay bằng $2');
+  s = s.replace(/\?/g, ' ');
   s = s.replace(/\s*\+\s*/g, ' cộng ');
   s = s.replace(/\s*-\s*/g, ' trừ ');
   s = s.replace(/>/g, ' lớn hơn ');
   s = s.replace(/</g, ' bé hơn ');
   s = s.replace(/=/g, ' bằng ');
-  s = s.replace(/_/g, ' chữ còn thiếu ');
+  s = s.replace(/_/g, ' ');
   s = s.replace(/\s+/g, ' ').trim();
   return s;
 }
@@ -322,11 +323,22 @@ function speakEn(text, huy){
     speechSynthesis.speak(u);
   }catch(e){}
 }
+let _docToken = 0;
 function docCauHoiHienTai(){
+  _docToken++; const token = _docToken;
   if(!current) return;
   const q = current.cauHoi[current.viTri]; if(!q) return;
-  if(q.doc) docTiengViet('Bé hãy chọn chữ ' + q.doc);
-  else if(q.docEn) speakEn(q.docEn);
+  if(q.docEn && current.game === 'nghe'){
+    docTiengViet(q.cau);
+    setTimeout(function(){ if(token !== _docToken) return; speakEn(q.docEn, false); }, 1600);
+    return;
+  }
+  if(q.docEn){ speakEn(q.docEn); return; }
+  if(current.game === 'ghepquiz'){
+    const m = String(q.cau).match(/^(.+?)\s*\+\s*(.+?)\s*=/);
+    if(m){ docTiengViet(m[1] + ' ghép với ' + m[2] + ' được tiếng gì'); return; }
+  }
+  if(q.doc && String(q.cau).indexOf(q.doc) < 0) docTiengViet('Bé hãy chọn chữ ' + q.doc);
   else docTiengViet(q.cau);
 }
 function docDapAn(i){
@@ -346,8 +358,9 @@ function docPhanHoi(q, dung){
   if(current && current.mon === 'tienganh'){
     let word = String(q.dapAn);
     if(current.game === 'nghe') word = word.replace(/^\S+\s+/, '');
-    if(dung){ docTiengViet('Đúng rồi! Bé giỏi quá!'); setTimeout(function(){ speakEn(word, false); }, 1100); }
-    else { docTiengViet('Chưa đúng rồi.'); setTimeout(function(){ speakEn(word, false); }, 1100); }
+    const token = _docToken;
+    if(dung){ docTiengViet('Đúng rồi! Bé giỏi quá!'); setTimeout(function(){ if(token !== _docToken) return; speakEn(word, false); }, 1100); }
+    else { docTiengViet('Chưa đúng rồi.'); setTimeout(function(){ if(token !== _docToken) return; speakEn(word, false); }, 1100); }
     return;
   }
   if(dung) docTiengViet('Đúng rồi! Bé giỏi quá!');
@@ -846,6 +859,7 @@ function render2048(){
   document.getElementById('noiDungGame').innerHTML =
     '<div class="khung-bai"><h2>🔢 Trò chơi 2048</h2>'
     + '<p class="mo-ta">Trượt các ô giống nhau để gộp lại: 2 + 2 = 4, 4 + 4 = 8... Bé ghép đến <b>128 là thắng</b> nhé!</p>'
+    + '<button class="nut nut-vang nut-nho" onclick="docTiengViet(\'Trượt các ô giống nhau để gộp lại. Bé ghép đến 128 là thắng nhé!\')">🔊 Nghe hướng dẫn</button>'
     + '<p style="font-size:22px">Điểm: <b id="diem2048">0</b> &nbsp;|&nbsp; Điểm cao nhất: <b id="best2048">' + _2048Best() + '</b></p>'
     + '<div id="thongBao2048" style="font-size:21px; font-weight:bold; min-height:30px"></div>'
     + '<div id="bang2048" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-width:380px; margin:14px auto; background:#d9c7a5; padding:10px; border-radius:18px; touch-action:none"></div>'
@@ -1077,7 +1091,7 @@ let _bongDem = 0;
 function renderMiniBong(){
   _bongDem = 0;
   document.getElementById('noiDungGame').innerHTML =
-    '<div class="khung-bai"><h2>🎈 Bắt bóng bay</h2><p class="mo-ta">Bấm vào quả bóng để làm vỡ nó. Vỡ đủ 10 quả là thắng!</p>'
+    '<div class="khung-bai"><h2>🎈 Bắt bóng bay</h2><p class="mo-ta">Bấm vào quả bóng để làm vỡ nó. Vỡ đủ 10 quả là thắng!</p><button class="nut nut-vang nut-nho" onclick="docTiengViet(\'Bấm vào quả bóng để làm vỡ nó. Vỡ đủ 10 quả là thắng!\')">🔊 Nghe hướng dẫn</button>'
     + '<p style="font-size:26px">Đã vỡ: <b id="demBong">0</b> / 10 quả</p>'
     + '<div id="sanBong" style="position:relative; height:300px; background:#e0f7f5; border-radius:20px; overflow:hidden"></div>'
     + '<div class="ke-trang"><button class="nut nut-hong" id="nutXongBong" onclick="thuogMiniGameBong()">✅ Bé bắt xong! Nhận sao</button></div></div>';
@@ -1104,7 +1118,7 @@ function renderMiniLatThe(){
   _latThe = tron(cap.concat(cap));
   _latDangMo = []; _latCapDung = 0; _latKhoa = false;
   document.getElementById('noiDungGame').innerHTML =
-    '<div class="khung-bai"><h2>🃏 Lật thẻ trí nhớ</h2><p class="mo-ta">Bấm vào 2 thẻ. Nếu 2 thẻ giống nhau thì giữ lại, khác nhau thì úp lại nhé!</p>'
+    '<div class="khung-bai"><h2>🃏 Lật thẻ trí nhớ</h2><p class="mo-ta">Bấm vào 2 thẻ. Nếu 2 thẻ giống nhau thì giữ lại, khác nhau thì úp lại nhé!</p><button class="nut nut-vang nut-nho" onclick="docTiengViet(\'Bấm vào 2 thẻ. Nếu 2 thẻ giống nhau thì giữ lại, khác nhau thì úp lại nhé!\')">🔊 Nghe hướng dẫn</button>'
     + '<p style="font-size:22px">Đã tìm đúng: <b id="demCap">0</b> / 4 cặp</p>'
     + '<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; max-width:480px; margin:0 auto">' + _latThe.map((c,i) =>
         '<button class="dap-an" id="the-' + i + '" onclick="latThe(' + i + ')">❓</button>').join('') + '</div>'
@@ -1148,7 +1162,7 @@ function veVongTimSao(){
   const cacSao = [];
   for(let i = 0; i < 9; i++) cacSao.push(i === viTriKhac ? '🌟' : '⭐');
   document.getElementById('noiDungGame').innerHTML =
-    '<div class="khung-bai"><h2>⭐ Tìm sao khác biệt</h2><p class="mo-ta">Trong 9 ngôi sao, có 1 ngôi sao khác biệt. Bé tìm và bấm vào nó nhé!</p>'
+    '<div class="khung-bai"><h2>⭐ Tìm sao khác biệt</h2><p class="mo-ta">Trong 9 ngôi sao, có 1 ngôi sao khác biệt. Bé tìm và bấm vào nó nhé!</p><button class="nut nut-vang nut-nho" onclick="docTiengViet(\'Trong 9 ngôi sao, có 1 ngôi sao khác biệt. Bé tìm và bấm vào nó nhé!\')">🔊 Nghe hướng dẫn</button>'
     + '<p style="font-size:22px">Vòng: <b>' + (_timSaoVong + 1) + '</b> / 3</p>'
     + '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:420px; margin:0 auto">' + cacSao.map((c,i) =>
         '<button class="dap-an" onclick="chonSao(' + i + ',' + viTriKhac + ')">' + c + '</button>').join('') + '</div>'
@@ -1542,7 +1556,7 @@ function chonDapAn(nut, chiSo){
   document.getElementById('nutTiep').style.display='inline-block';
 }
 function cauTiepTheo(){
-  amClick(); current.viTri++;
+  amClick(); _docToken++; try{ speechSynthesis.cancel(); }catch(e){} current.viTri++;
   if(current.viTri < current.cauHoi.length) renderCauHoi();
   else ketThucGame();
 }
