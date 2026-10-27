@@ -135,6 +135,15 @@
     font-size:20px; font-weight:bold; display:none; z-index:99; box-shadow:0 6px 20px rgba(0,0,0,.3);
   }
   .huy-hieu{display:inline-block; background:#fff; border-radius:16px; padding:10px 14px; margin:6px; box-shadow:0 3px 8px rgba(0,0,0,.1)}
+  .luoi-thu-vien{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; margin-top:16px}
+  .the-thu-vien{background:#fffbe6; border-radius:18px; padding:16px; text-align:left; box-shadow:0 3px 8px rgba(0,0,0,.08); border:2px solid #ffe9a8}
+  .the-thu-vien b{font-size:21px; display:block; margin:4px 0 2px; color:#222}
+  .the-thu-vien span{font-size:18px; color:#555}
+  .mini-game-card{background:#fff; border-radius:20px; padding:18px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.1); cursor:pointer; border:3px solid transparent}
+  .mini-game-card:hover{border-color:var(--vang); transform:translateY(-2px)}
+  .mini-game-card b{font-size:22px; display:block; margin:6px 0}
+  .mini-game-card span{font-size:18px; color:#555}
+  .mini-game-card.khoa{filter:grayscale(1); opacity:.65; cursor:not-allowed}
   @media (max-width:600px){
     header h1{font-size:26px} body{font-size:18px}
     .luoi-dap-an{grid-template-columns:1fr} .cau-hoi{font-size:26px}
@@ -162,7 +171,6 @@
   <section id="manHinhChinh">
     <h2>👋 Xin chào bé! Hôm nay bé muốn học gì?</h2>
     <p class="mo-ta">Chạm vào một môn học để bắt đầu. Trả lời đúng được sao vàng, hoàn thành bài được huy hiệu và hình dán!</p>
-    <p style="text-align:center; margin:0 0 16px"><span class="chip" id="chipThuVien">📚 Thư viện: đang tải...</span> <span class="chip" id="chipThuVienChiTiet"></span><br><span style="font-size:17px; color:#555">Mỗi lượt chơi lấy ngẫu nhiên 8-10 câu nên bé chơi lại vẫn gặp câu mới.</span></p>
     <div class="luoi-mon" id="luoiMon"></div>
 
     <div class="khung-bai">
@@ -173,6 +181,19 @@
       <div id="khuHuyHieu"><p style="color:#888">Chưa có huy hiệu. Làm đúng câu đầu tiên để nhận huy hiệu đầu tiên nhé!</p></div>
       <h3>🎁 Bộ sưu tập hình dán</h3>
       <div id="khuSticker"><p style="color:#888">Hoàn thành một bài chơi để mở hình dán đầu tiên!</p></div>
+    </div>
+
+    <div class="khung-bai">
+      <h3 style="margin-top:0">📚 Thư viện câu hỏi</h3>
+      <p id="tongThuVien" class="mo-ta" style="margin-bottom:0">Đang tải thư viện...</p>
+      <div id="khuThuVien" class="luoi-thu-vien"></div>
+      <p style="font-size:17px; color:#555; margin-bottom:0">Mỗi lượt chơi lấy ngẫu nhiên 8-10 câu nên bé chơi lại vẫn gặp câu mới.</p>
+    </div>
+
+    <div class="khung-bai">
+      <h3 style="margin-top:0">🎮 Khu vui chơi thưởng</h3>
+      <p class="mo-ta" style="margin-bottom:0">Hoàn thành 1 bài học là mở khóa khu này. Đạt 30 sao trong ngày là chơi thỏa thích cả 3 trò!</p>
+      <div id="khuVuiChoi" style="margin-top:16px"></div>
     </div>
   </section>
 
@@ -269,7 +290,7 @@ let state = null;
 try{ state = JSON.parse(localStorage.getItem(KHOA_LUU) || 'null'); }catch(e){ state = null; }
 if(!state || typeof state !== 'object'){
   state = { stars:0, points:0, correct:0, total:0, stickers:[], badges:[],
-    history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, amnhac:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[] };
+    history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, amnhac:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[], daLamBai:false };
 }
 function luu(){ try{ localStorage.setItem(KHOA_LUU, JSON.stringify(state)); }catch(e){} }
 const DS_STICKER = ['🦄','🦁','🐳','🦋','🌈','🚀','🍓','🐼','🦊','🐯','🌸','⭐'];
@@ -627,10 +648,17 @@ function renderDashboard(){
       + '<span class="icon">'+m.icon+'</span><h3>'+m.ten+'</h3><p>'+(tat?'Phụ huynh đã tạm tắt môn này':m.moTa)+'</p></div>';
   }).join('');
   capNhatTieuDe();
-  const ct = document.getElementById('chipThuVien');
-  if(ct) ct.textContent = '📚 Thư viện: ' + NGAN_HANG.length.toLocaleString('vi-VN') + ' câu hỏi';
-  const ctd = document.getElementById('chipThuVienChiTiet');
-  if(ctd) ctd.textContent = MON_HOC.map(m => m.ten + ' ' + NGAN_HANG.filter(q => q.mon === m.id).length).join(' • ');
+  renderThuVien();
+  if(typeof renderKhuVuiChoi === 'function') renderKhuVuiChoi();
+}
+function renderThuVien(){
+  const el = document.getElementById('khuThuVien');
+  if(!el) return;
+  const dem = MON_HOC.map(m => NGAN_HANG.filter(q => q.mon === m.id).length);
+  const lonNhat = Math.max.apply(null, dem.concat([1]));
+  el.innerHTML = MON_HOC.map((m, i) => '<div class="the-thu-vien"><span style="font-size:36px">' + m.icon + '</span><b>' + m.ten + '</b><span>' + dem[i].toLocaleString('vi-VN') + ' câu hỏi</span><div class="thanh-tien-do" style="height:12px; margin:10px 0 0"><i style="width:' + Math.round(dem[i] / lonNhat * 100) + '%"></i></div></div>').join('');
+  const tong = document.getElementById('tongThuVien');
+  if(tong) tong.textContent = 'Tổng cộng ' + NGAN_HANG.length.toLocaleString('vi-VN') + ' câu hỏi trong ' + MON_HOC.length + ' môn học.';
 }
 function moMon(monId){
   if(state.tatMon.includes(monId)){ toast('Môn này đang được phụ huynh tạm tắt.'); return; }
@@ -725,6 +753,7 @@ function ketThucGame(){
   let stickerMoi = '';
   const chuaCo = DS_STICKER.filter(s=>!state.stickers.includes(s));
   if(chuaCo.length){ stickerMoi = chuaCo[soNgauNhien(0,chuaCo.length-1)]; state.stickers.push(stickerMoi); }
+  state.daLamBai = true;
   const tenGame = (GAME_THEO_MON[current.mon]||[]).find(g=>g.id===current.game);
   state.history.unshift({ngay:new Date().toLocaleString('vi-VN'), mon:MON_HOC.find(m=>m.id===current.mon).ten, bai:tenGame?tenGame.ten:'Bài chơi', tong: tong});
   state.history = state.history.slice(0,30);
@@ -734,7 +763,12 @@ function ketThucGame(){
     + '<p style="font-size:22px">Bé trả lời đúng <b>'+dung+' / '+tong+' câu</b> ('+tyLe+'%). Bé được thưởng thêm <b>+'+thuong+' sao</b> vì đã cố gắng đến cuối!</p>'
     + (stickerMoi ? '<p style="font-size:24px">🎁 Bé mở được hình dán mới: <span style="font-size:52px">'+stickerMoi+'</span></p>' : '<p>🎁 Bé đã sưu tập đủ hình dán trong đợt này rồi!</p>')
     + '<div class="ke-trang"><button class="nut nut-hong" onclick="batDauGame(\''+current.mon+'\',\''+current.game+'\')">🔄 Chơi lại bài này</button>'
-    + '<button class="nut nut-xanh" onclick="moMon(\''+current.mon+'\')">📚 Chọn bài khác</button></div></div>';
+    + '<button class="nut nut-xanh" onclick="moMon(\''+current.mon+'\')">📚 Chọn bài khác</button></div>'
+    + '<div style="margin-top:22px; border-top:3px dashed #ffc93c; padding-top:16px"><h3 style="margin:0">🎮 Thưởng: 3 trò chơi nho nhỏ đã mở khóa!</h3>'
+    + (state.stars >= 30 ? '<p style="font-size:20px">🏆 Bé đã đạt mục tiêu 30 sao hôm nay rồi! Chơi thỏa thích nhé!</p>' : '<p style="font-size:19px">Bé vừa hoàn thành 1 bài học nên khu vui chơi đã mở khóa rồi đấy!</p>')
+    + '<div class="ke-trang"><button class="nut nut-vang" onclick="renderMiniBong()">🎈 Bắt bóng bay</button>'
+    + '<button class="nut nut-vang" onclick="renderMiniLatThe()">🃏 Lật thẻ trí nhớ</button>'
+    + '<button class="nut nut-vang" onclick="renderMiniTimSao()">⭐ Tìm sao khác biệt</button></div></div></div>';
 }
 </script>
 <script>
@@ -831,7 +865,7 @@ function doiMonPhuHuynh(monId, choPhep){
 function datLaiTienDo(){
   if(!confirm('Phụ huynh có chắc muốn xóa toàn bộ sao, điểm, huy hiệu và lịch sử của bé không?')) return;
   localStorage.removeItem(KHOA_LUU);
-  state = { stars:0, points:0, correct:0, total:0, stickers:[], badges:[], history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}}, tatMon:[] };
+  state = { stars:0, points:0, correct:0, total:0, stickers:[], badges:[], history:[], per:{viet:{c:0,t:0}, toan:{c:0,t:0}, life:{c:0,t:0}, daoduc:{c:0,t:0}, amnhac:{c:0,t:0}, mithuat:{c:0,t:0}, thechat:{c:0,t:0}, trainghiem:{c:0,t:0}, tienganh:{c:0,t:0}}, tatMon:[], daLamBai:false };
   luu(); veTrangChu(); toast('Đã đặt lại tiến độ.');
 }
 
