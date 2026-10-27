@@ -314,20 +314,75 @@ try{
     speechSynthesis.onvoiceschanged = function(){ speechSynthesis.getVoices(); };
   }
 }catch(e){}
+/* Giong Viet tu server (Piper) + giong may, tra Promise de noi tiep cau.
+   Ly do: trinh duyet tren may tinh thuong KHONG co giong tieng Viet,
+   nen docTiengViet uu tien lay am thanh tu /tts cua server tam tren may
+   nay (Piper vi-VN, da nap san). Neu server khong co (mo bang file://,
+   Pages, hoac server tam tat), tu dong ve SpeechSynthesis cua trinh duyet.
+   _ttsCoTheDung: null = chua biet, true = server co, false = server khong
+   co trong phien nay (de khoi fetch lai moi cau). */
+let _ttsAudio = null;
+let _ttsCoTheDung = null;
+function dungAmThanhMayChu(){
+  try{ if(_ttsAudio){ _ttsAudio.pause(); _ttsAudio = null; } }catch(e){}
+  try{ speechSynthesis.cancel(); }catch(e){}
+}
+function noiBangGiongMay(spoken){
+  return new Promise(function(giaiQuyet){
+    let xong = false;
+    function xong1Lan(){ if(!xong){ xong = true; giaiQuyet(); } }
+    try{
+      if(!('speechSynthesis' in window)){ xong1Lan(); return; }
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(spoken);
+      u.lang = 'vi-VN'; u.rate = 0.85;
+      const v = layGiongViet(); if(v) u.voice = v;
+      u.onend = xong1Lan; u.onerror = xong1Lan;
+      speechSynthesis.speak(u);
+      setTimeout(xong1Lan, Math.max(1500, spoken.length * 120));
+    }catch(e){ xong1Lan(); }
+  });
+}
 function docTiengViet(text){
-  if(!voiceBat) return;
-  try{
-    if(!('speechSynthesis' in window)) return;
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(vietHoaCauHoi(text));
-    u.lang = 'vi-VN'; u.rate = 0.85;
-    const v = layGiongViet(); if(v) u.voice = v;
-    speechSynthesis.speak(u);
-  }catch(e){}
+  if(!voiceBat) return Promise.resolve();
+  const spoken = vietHoaCauHoi(text);
+  if(!spoken) return Promise.resolve();
+  const token = _docToken;
+  dungAmThanhMayChu();
+  if(_ttsCoTheDung === false) return noiBangGiongMay(spoken);
+  if(typeof fetch !== 'function' || typeof Audio === 'undefined') return noiBangGiongMay(spoken);
+  return fetch('/tts?text=' + encodeURIComponent(spoken))
+    .then(function(resp){
+      if(!resp.ok) throw new Error('tts fail');
+      const ct = resp.headers.get('content-type') || '';
+      if(ct.indexOf('audio') < 0) throw new Error('not audio');
+      return resp.blob();
+    })
+    .then(function(blob){
+      if(token !== _docToken) return;
+      _ttsCoTheDung = true;
+      return new Promise(function(giaiQuyet){
+        let xong = false;
+        function xong1Lan(){ if(!xong){ xong = true; if(_ttsAudio === a) _ttsAudio = null; giaiQuyet(); } }
+        let a;
+        try{ a = new Audio(URL.createObjectURL(blob)); }catch(e){ return noiBangGiongMay(spoken).then(giaiQuyet); }
+        _ttsAudio = a;
+        a.onended = xong1Lan; a.onerror = xong1Lan;
+        const pr = a.play();
+        if(pr && pr.catch) pr.catch(function(){ xong1Lan(); });
+        setTimeout(xong1Lan, Math.max(2000, spoken.length * 120));
+      });
+    })
+    .catch(function(){
+      if(token !== _docToken) return;
+      _ttsCoTheDung = false;
+      return noiBangGiongMay(spoken);
+    });
 }
 function speakEn(text, huy){
   if(!voiceBat) return;
   try{
+    if(_ttsAudio){ try{ _ttsAudio.pause(); _ttsAudio = null; }catch(e){} }
     if(!('speechSynthesis' in window)) return;
     if(huy !== false) speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(String(text));
@@ -341,8 +396,7 @@ function docCauHoiHienTai(){
   if(!current) return;
   const q = current.cauHoi[current.viTri]; if(!q) return;
   if(q.docEn && current.game === 'nghe'){
-    docTiengViet(q.cau);
-    setTimeout(function(){ if(token !== _docToken) return; speakEn(q.docEn, false); }, 1600);
+    docTiengViet(q.cau).then(function(){ if(token !== _docToken) return; speakEn(q.docEn, false); });
     return;
   }
   if(q.docEn){ speakEn(q.docEn); return; }
@@ -372,8 +426,8 @@ function docPhanHoi(q, dung){
     let word = String(q.dapAn);
     if(current.game === 'nghe') word = word.replace(/^\S+\s+/, '');
     const token = _docToken;
-    if(dung){ docTiengViet('Đúng rồi! Bé giỏi quá!'); setTimeout(function(){ if(token !== _docToken) return; speakEn(word, false); }, 1100); }
-    else { docTiengViet('Chưa đúng rồi.'); setTimeout(function(){ if(token !== _docToken) return; speakEn(word, false); }, 1100); }
+    if(dung){ docTiengViet('Đúng rồi! Bé giỏi quá!').then(function(){ if(token !== _docToken) return; speakEn(word, false); }); }
+    else { docTiengViet('Chưa đúng rồi.').then(function(){ if(token !== _docToken) return; speakEn(word, false); }); }
     return;
   }
   if(dung) docTiengViet('Đúng rồi! Bé giỏi quá!');
@@ -384,20 +438,21 @@ function doiGiongDoc(){
   const el = document.getElementById('nutGiong');
   if(el) el.textContent = voiceBat ? '🎙️ Giọng đọc: Bật' : '🎙️ Giọng đọc: Tắt';
   if(voiceBat) docTiengViet('Xin chào bé!');
-  else { try{ speechSynthesis.cancel(); }catch(e){} }
+  else { dungAmThanhMayChu(); }
 }
 function thuGiongDoc(){
-  if(!('speechSynthesis' in window)){ toast('Thiết bị này không hỗ trợ giọng đọc.'); return; }
+  if(!('speechSynthesis' in window) && _ttsCoTheDung === false){ toast('Thiết bị này không hỗ trợ giọng đọc.'); return; }
   voiceBat = true;
   const el = document.getElementById('nutGiong'); if(el) el.textContent = '🎙️ Giọng đọc: Bật';
   docTiengViet('Xin chào bé! Hôm nay bé muốn học gì?');
   setTimeout(function(){
-    if(!layGiongViet()) toast('Không tìm thấy giọng Tiếng Việt trên máy này. Bé cần cài giọng Tiếng Việt trong cài đặt điện thoại nhé!');
+    if(!layGiongViet() && _ttsCoTheDung !== true) toast('Trình duyệt này chưa có giọng Tiếng Việt. Mở app qua link server tạm trên máy này để dùng giọng Việt từ server, hoặc cài giọng Tiếng Việt trong cài đặt Text-to-Speech của máy nhé!');
   }, 1500);
 }
 function capNhatTrangThaiGiong(){
   const el = document.getElementById('trangThaiGiong'); if(!el) return;
   if(!('speechSynthesis' in window)){ el.textContent = '🔊 Giọng đọc: Thiết bị này không hỗ trợ giọng đọc.'; return; }
+  if(_ttsCoTheDung === true){ el.textContent = '🔊 Giọng đọc: Đang dùng giọng Việt từ server của app (không cần giọng của trình duyệt).'; return; }
   if(layGiongViet()){ el.textContent = '🔊 Giọng đọc: Đã tìm thấy giọng Tiếng Việt trên máy này.'; return; }
   el.textContent = '🔊 Giọng đọc: Chưa tìm thấy giọng Tiếng Việt. Trên Android: Cài đặt > Hệ thống > Ngôn ngữ > Text-to-Speech > chọn Google Text-to-Speech, tải giọng Tiếng Việt. Trên iPhone: Cài đặt > Trợ năng > Nội dung được đọc > Giọng nói > Tiếng Việt.';
 }
@@ -882,7 +937,7 @@ function chonDapAn(nut, chiSo){
   document.getElementById('nutTiep').style.display='inline-block';
 }
 function cauTiepTheo(){
-  amClick(); _docToken++; try{ speechSynthesis.cancel(); }catch(e){} current.viTri++;
+  amClick(); _docToken++; try{ speechSynthesis.cancel(); }catch(e){} try{ if(_ttsAudio){ _ttsAudio.pause(); _ttsAudio = null; } }catch(e){} current.viTri++;
   if(current.viTri < current.cauHoi.length) renderCauHoi();
   else ketThucGame();
 }
