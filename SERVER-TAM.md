@@ -2,7 +2,7 @@
 
 ## URL tạm (kiểm chứng ngày 2026-10-27)
 
-- https://30679a5a27f50d.lhr.life/
+- ~~https://30679a5a27f50d.lhr.life/~~ — ĐÃ HỦY ngày 2026-10-27, link này đã chết (no tunnel).
 - Mở link trên là vào thẳng app (index chuyển hướng tới file dist mới nhất).
 - Kiểm tra server còn sống: https://30679a5a27f50d.lhr.life/health
   phải trả `{"ok": true, ...}`.

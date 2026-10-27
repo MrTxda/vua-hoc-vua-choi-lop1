@@ -16,14 +16,9 @@ Không cần server, không cần mạng (trừ giọng đọc có sẵn của t
   (repo PUBLIC, không cần đăng nhập, máy nào mở cũng được).
   Hạn chế: bản Pages không có server `/tts`, nên trên máy tính
   không có giọng Tiếng Việt thì giọng đọc sẽ về giọng máy.
-- **Link server tạm, có giọng Việt cho máy tính:**
-  https://30679a5a27f50d.lhr.life/ (xem `SERVER-TAM.md`).
-  Link này mở được từ nhiều máy, không cần đăng nhập, nhưng chỉ
-  là tạm: server chết khi máy chủ khởi động lại, URL đổi mỗi lần
-  tunnel khởi động lại, và máy chủ này không phải server sản xuất
-  (giọng `/tts` tổng hợp nối tiếp nhau, nhiều máy bấm cùng lúc sẽ
-  phải xếp hàng vài giây). Server chỉ phục vụ file app, không liệt
-  kê thư mục và chặn `.git`, `tts-cache`, `server-url.txt`.
+- **Link server tạm, có giọng Việt cho máy tính:** ĐÃ HỦY ngày
+  2026-10-27 theo lệnh của user (xem `SERVER-TAM.md`). Từ nay chỉ
+  dùng link Pages ở trên.
 
 ## Cấu trúc nguồn (đã tách riêng, theo lựa chọn ngày 2026-10-27)
 
